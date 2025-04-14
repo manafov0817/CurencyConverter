@@ -28,19 +28,23 @@ The project follows Clean Architecture principles with the following layers:
 - **Core Layer**: Business logic, domain models, and interfaces
 - **Infrastructure Layer**: External service integrations, caching, security, and data access
 
-### Why Clean Architecture?
+### Why This Architecture for a Currency Converter API?
 
-This architecture was chosen for several key benefits:
+This architecture was specifically chosen for a currency converter API for several key benefits:
 
-1. **Separation of Concerns**: Each layer has a distinct responsibility, making the codebase more maintainable and easier to understand.
+1. **Separation of Concerns**: Each layer has a distinct responsibility, making the codebase more maintainable and easier to understand. For a currency converter that needs to handle various exchange rate providers, conversion logic, and API endpoints, this clear separation helps manage complexity.
 
-2. **Dependency Rule**: Dependencies flow inward, with the Core layer having no dependencies on outer layers. This ensures that business logic remains independent of implementation details.
+2. **Dependency Rule**: Dependencies flow inward, with the Core layer having no dependencies on outer layers. This ensures that business logic remains independent of implementation details. This is particularly valuable for a currency converter that might need to switch between different exchange rate providers (like Frankfurter, Open Exchange Rates, etc.) without affecting core conversion logic.
 
-3. **Testability**: The use of interfaces and dependency injection makes the code highly testable, allowing for effective unit testing without external dependencies.
+3. **Testability**: The use of interfaces and dependency injection makes the code highly testable, allowing for effective unit testing without external dependencies. For financial applications like currency converters, high test coverage is critical to ensure accurate calculations and reliable service.
 
-4. **Flexibility**: The architecture allows for easy replacement of external components (like the currency provider) without affecting the core business logic.
+4. **Flexibility**: The architecture allows for easy replacement of external components (like the currency provider) without affecting the core business logic. This is essential for a currency converter API that needs to maintain service continuity even if an external provider becomes unavailable.
 
-5. **Scalability**: As the application grows, new features can be added without significant refactoring of existing code.
+5. **Scalability**: As the application grows, new features can be added without significant refactoring of existing code. The currency converter might need to add features like historical rate analysis, currency alerts, or support for cryptocurrencies in the future.
+
+6. **Resilience**: By isolating external dependencies in the Infrastructure layer, the application can implement resilience patterns (retry, circuit breaker, fallback) to handle external service failures gracefully. This is crucial for a currency converter that depends on third-party APIs for rate data.
+
+7. **Security**: The layered approach allows for implementing security concerns at appropriate levels - authentication and authorization at the API layer, while keeping business rules protected in the Core layer. For financial data, this separation helps maintain proper security boundaries.
 
 ### Key Design Patterns
 
@@ -48,7 +52,6 @@ This architecture was chosen for several key benefits:
 - **Factory Pattern**: Used for creating appropriate currency providers
 - **Dependency Injection**: Used throughout the application for loose coupling
 - **Options Pattern**: Used for configuration management (e.g., restricted currencies)
-- **Mediator Pattern**: Simplifies communication between components
 
 ## Getting Started
 
