@@ -7,17 +7,15 @@ using System.ComponentModel.DataAnnotations;
 namespace CurrencyConverter.Api.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/[controller]")]
     [Authorize]
     public class CurrencyController : ControllerBase
     {
         private readonly ICurrencyService _currencyService;
-        private readonly ILogger<CurrencyController> _logger;
-
-        public CurrencyController(ICurrencyService currencyService, ILogger<CurrencyController> logger)
+        public CurrencyController(ICurrencyService currencyService)
         {
             _currencyService = currencyService ?? throw new ArgumentNullException(nameof(currencyService));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         [HttpGet("rates")]
@@ -27,12 +25,6 @@ namespace CurrencyConverter.Api.Controllers
             if (string.IsNullOrEmpty(baseCurrency))
             {
                 return BadRequest("Base currency is required");
-            }
-
-            var restrictedCurrencies = new[] { "TRY", "PLN", "THB", "MXN" };
-            if (Array.Exists(restrictedCurrencies, c => c.Equals(baseCurrency, StringComparison.OrdinalIgnoreCase)))
-            {
-                return BadRequest($"Currency {baseCurrency} is restricted and cannot be used");
             }
 
             var result = await _currencyService.GetLatestRatesAsync(baseCurrency);
@@ -54,13 +46,6 @@ namespace CurrencyConverter.Api.Controllers
             if (string.IsNullOrEmpty(fromCurrency) || string.IsNullOrEmpty(toCurrency))
             {
                 return BadRequest("Source and target currencies must be specified");
-            }
-
-            var restrictedCurrencies = new[] { "TRY", "PLN", "THB", "MXN" };
-            if (Array.Exists(restrictedCurrencies, c => c.Equals(fromCurrency, StringComparison.OrdinalIgnoreCase)) ||
-                Array.Exists(restrictedCurrencies, c => c.Equals(toCurrency, StringComparison.OrdinalIgnoreCase)))
-            {
-                return BadRequest("Restricted currencies cannot be used in conversion");
             }
 
             var request = new CurrencyConversionRequest
@@ -86,12 +71,6 @@ namespace CurrencyConverter.Api.Controllers
             if (string.IsNullOrEmpty(baseCurrency))
             {
                 return BadRequest("Base currency is required");
-            }
-
-            var restrictedCurrencies = new[] { "TRY", "PLN", "THB", "MXN" };
-            if (Array.Exists(restrictedCurrencies, c => c.Equals(baseCurrency, StringComparison.OrdinalIgnoreCase)))
-            {
-                return BadRequest($"Currency {baseCurrency} is restricted and cannot be used");
             }
 
             if (startDate > endDate)

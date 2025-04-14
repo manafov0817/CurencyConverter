@@ -1,6 +1,7 @@
 using CurrencyConverter.Core.Interfaces;
 using CurrencyConverter.Core.Models.Currency;
 using CurrencyConverter.Core.Utilities;
+using MapsterMapper;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 
@@ -11,6 +12,7 @@ namespace CurrencyConverter.Core.Services
         private readonly ICurrencyProviderFactory _providerFactory;
         private readonly IMemoryCache _cache;
         private readonly ILogger<CurrencyService> _logger;
+        private readonly IMapper _mapper;
         private readonly HashSet<string> _restrictedCurrencies = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
             "TRY", "PLN", "THB", "MXN"
@@ -19,11 +21,18 @@ namespace CurrencyConverter.Core.Services
         public CurrencyService(
             ICurrencyProviderFactory providerFactory,
             IMemoryCache cache,
-            ILogger<CurrencyService> logger)
+            ILogger<CurrencyService> logger,
+            IMapper mapper)
         {
             _providerFactory = providerFactory ?? throw new ArgumentNullException(nameof(providerFactory));
             _cache = cache ?? throw new ArgumentNullException(nameof(cache));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+        }
+
+        public bool IsRestrictedCurrency(string currency)
+        {
+            return _restrictedCurrencies.Contains(currency);
         }
 
         public async Task<ExchangeRateResponse> GetLatestRatesAsync(string baseCurrency)
@@ -104,18 +113,13 @@ namespace CurrencyConverter.Core.Services
                     request.FromCurrency, request.ToCurrency);
             }
 
-            var rate = conversionData.Rates[request.ToCurrency];
-            var convertedAmount = request.Amount * rate;
-
-            return new CurrencyConversionResponse
-            {
-                Amount = request.Amount,
-                FromCurrency = request.FromCurrency,
-                ToCurrency = request.ToCurrency,
-                ConvertedAmount = convertedAmount,
-                Rate = rate,
-                Date = conversionData.Date
-            };
+            // Use Mapster to map from the source data to CurrencyConversionResponse
+            return _mapper.Map<CurrencyConversionResponse>((
+                Source: conversionData,
+                Amount: request.Amount,
+                FromCurrency: request.FromCurrency,
+                ToCurrency: request.ToCurrency
+            ));
         }
 
         public async Task<PaginatedResponse<HistoricalRate>> GetHistoricalRatesAsync(HistoricalRatesRequest request)
@@ -203,9 +207,9 @@ namespace CurrencyConverter.Core.Services
             return new PaginatedResponse<HistoricalRate>
             {
                 Items = paginatedRates,
-                TotalCount = totalCount,
                 Page = request.Page,
-                PageSize = request.PageSize
+                PageSize = request.PageSize,
+                TotalCount = totalCount 
             };
         }
     }

@@ -59,7 +59,6 @@ namespace CurrencyConverter.Api
         public static IApplicationBuilder UseApiMiddleware(this IApplicationBuilder app)
         {
             // Add custom middleware
-            app.UseMiddleware<PerformanceTrackingMiddleware>(); 
             app.UseMiddleware<ExceptionHandlingMiddleware>();
             app.UseMiddleware<RequestLoggingMiddleware>();
             app.UseMiddleware<RateLimitingMiddleware>();

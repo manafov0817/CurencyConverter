@@ -1,9 +1,14 @@
 using CurrencyConverter.Core.Interfaces;
-using CurrencyConverter.Core.Models;
+using CurrencyConverter.Core.Models.Currency;
 using CurrencyConverter.Core.Services;
+using MapsterMapper;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Moq;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace CurrencyConverter.Tests
@@ -13,6 +18,7 @@ namespace CurrencyConverter.Tests
         private readonly Mock<ICurrencyProviderFactory> _mockProviderFactory;
         private readonly Mock<ICurrencyProvider> _mockProvider;
         private readonly Mock<ILogger<CurrencyService>> _mockLogger;
+        private readonly Mock<IMapper> _mockMapper;
         private readonly IMemoryCache _cache;
         private readonly CurrencyService _service;
 
@@ -21,6 +27,7 @@ namespace CurrencyConverter.Tests
             _mockProviderFactory = new Mock<ICurrencyProviderFactory>();
             _mockProvider = new Mock<ICurrencyProvider>();
             _mockLogger = new Mock<ILogger<CurrencyService>>();
+            _mockMapper = new Mock<IMapper>();
 
             // Setup real memory cache for testing
             _cache = new MemoryCache(new MemoryCacheOptions());
@@ -29,7 +36,7 @@ namespace CurrencyConverter.Tests
             _mockProviderFactory.Setup(f => f.GetProvider(It.IsAny<string>()))
                 .Returns(_mockProvider.Object);
 
-            _service = new CurrencyService(_mockProviderFactory.Object, _cache, _mockLogger.Object);
+            _service = new CurrencyService(_mockProviderFactory.Object, _cache, _mockLogger.Object, _mockMapper.Object);
         }
 
         [Fact]
@@ -98,8 +105,27 @@ namespace CurrencyConverter.Tests
                 }
             };
 
+            var expectedResult = new CurrencyConversionResponse
+            {
+                Amount = request.Amount,
+                FromCurrency = request.FromCurrency,
+                ToCurrency = request.ToCurrency,
+                ConvertedAmount = 85.0m,
+                Rate = 0.85m,
+                Date = DateTime.Today
+            };
+
             _mockProvider.Setup(p => p.ConvertCurrencyAsync(1, request.FromCurrency, request.ToCurrency))
                 .ReturnsAsync(conversionResponse);
+
+            // Setup mapper to return our expected result
+            _mockMapper.Setup(m => m.Map<CurrencyConversionResponse>(
+                    It.Is<(ExchangeRateResponse Source, decimal Amount, string FromCurrency, string ToCurrency)>(
+                        tuple => tuple.Source == conversionResponse &&
+                                tuple.Amount == request.Amount &&
+                                tuple.FromCurrency == request.FromCurrency &&
+                                tuple.ToCurrency == request.ToCurrency)))
+                .Returns(expectedResult);
 
             // Act
             var result = await _service.ConvertCurrencyAsync(request);
@@ -111,6 +137,15 @@ namespace CurrencyConverter.Tests
             Assert.Equal(request.ToCurrency, result.ToCurrency);
             Assert.Equal(85.0m, result.ConvertedAmount); // 100 * 0.85
             Assert.Equal(0.85m, result.Rate);
+            
+            // Verify mapper was called
+            _mockMapper.Verify(m => m.Map<CurrencyConversionResponse>(
+                It.Is<(ExchangeRateResponse Source, decimal Amount, string FromCurrency, string ToCurrency)>(
+                    tuple => tuple.Source == conversionResponse &&
+                            tuple.Amount == request.Amount &&
+                            tuple.FromCurrency == request.FromCurrency &&
+                            tuple.ToCurrency == request.ToCurrency)), 
+                Times.Once);
         }
 
         [Fact]
@@ -158,9 +193,50 @@ namespace CurrencyConverter.Tests
                 }
             };
 
+            var historicalRates = new List<HistoricalRate>
+            {
+                new HistoricalRate
+                {
+                    Date = new DateTime(2020, 1, 1),
+                    BaseCurrency = request.BaseCurrency,
+                    Rates = new Dictionary<string, decimal> { { "EUR", 0.85m }, { "GBP", 0.75m } }
+                },
+                new HistoricalRate
+                {
+                    Date = new DateTime(2020, 1, 2),
+                    BaseCurrency = request.BaseCurrency,
+                    Rates = new Dictionary<string, decimal> { { "EUR", 0.86m }, { "GBP", 0.76m } }
+                }
+            };
+
+            var expectedResult = new PaginatedResponse<HistoricalRate>
+            {
+                Items = historicalRates,
+                Page = request.Page,
+                PageSize = request.PageSize,
+                TotalCount = 3
+            };
+
             _mockProvider.Setup(p => p.GetHistoricalRatesAsync(
                     request.BaseCurrency, request.StartDate, request.EndDate))
                 .ReturnsAsync(historicalData);
+
+            // Setup mapper to return our expected result
+            _mockMapper.Setup(m => m.Map<List<HistoricalRate>>(
+                    It.Is<(Dictionary<DateTime, Dictionary<string, decimal>> Data, string BaseCurrency)>(
+                        tuple => tuple.BaseCurrency == request.BaseCurrency)))
+                .Returns(historicalData.Select(kvp => new HistoricalRate
+                {
+                    Date = kvp.Key,
+                    BaseCurrency = request.BaseCurrency,
+                    Rates = kvp.Value.Where(r => !_service.IsRestrictedCurrency(r.Key))
+                        .ToDictionary(r => r.Key, r => r.Value)
+                }).ToList());
+
+            _mockMapper.Setup(m => m.Map<PaginatedResponse<HistoricalRate>>(
+                    It.Is<(HistoricalRatesRequest Request, List<HistoricalRate> AllRates)>(
+                        tuple => tuple.Request == request)))
+                .Returns(expectedResult);
 
             // Act
             var result = await _service.GetHistoricalRatesAsync(request);
@@ -178,6 +254,12 @@ namespace CurrencyConverter.Tests
                 Assert.False(item.Rates.ContainsKey("TRY"));
                 Assert.Equal(2, item.Rates.Count); // Should have EUR and GBP, but not TRY
             }
+            
+            // Verify mapper was called
+            _mockMapper.Verify(m => m.Map<PaginatedResponse<HistoricalRate>>(
+                It.Is<(HistoricalRatesRequest Request, List<HistoricalRate> AllRates)>(
+                    tuple => tuple.Request == request)), 
+                Times.Once);
         }
 
         [Fact]

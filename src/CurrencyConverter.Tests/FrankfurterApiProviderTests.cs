@@ -1,4 +1,5 @@
 using CurrencyConverter.Core.Models;
+using CurrencyConverter.Core.Models.Currency;
 using CurrencyConverter.Infrastructure.Providers;
 using Microsoft.Extensions.Logging;
 using Moq;

@@ -1,4 +1,5 @@
 using CurrencyConverter.Core.Interfaces;
+using CurrencyConverter.Core.Mapping;
 using CurrencyConverter.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -10,6 +11,9 @@ namespace CurrencyConverter.Core
         {
             // Register core services
             services.AddScoped<ICurrencyService, CurrencyService>();
+            
+            // Register Mapster
+            services.AddMapster();
 
             return services;
         }

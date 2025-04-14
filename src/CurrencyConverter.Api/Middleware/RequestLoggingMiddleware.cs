@@ -17,11 +17,7 @@ namespace CurrencyConverter.Api.Middleware
 
         public async Task InvokeAsync(HttpContext context)
         {
-            // Get the stopwatch from the PerformanceTrackingMiddleware
-            var stopwatch = context.Items.ContainsKey("RequestStopwatch") 
-                ? (Stopwatch)context.Items["RequestStopwatch"] 
-                : null;
-                
+            var stopwatch = Stopwatch.StartNew();
             var clientIp = context.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
             var clientId = context.User.FindFirst("ClientId")?.Value ?? "Unknown";
             var method = context.Request.Method;
@@ -40,16 +36,22 @@ namespace CurrencyConverter.Api.Middleware
                 // Call the next middleware in the pipeline
                 await _next(context);
 
+                stopwatch.Stop();
                 var statusCode = context.Response.StatusCode;
+                var elapsedMs = stopwatch.ElapsedMilliseconds;
+
+                // Add timing header to response (useful for client-side monitoring)
+                context.Response.Headers.Add("X-Response-Time-Ms", elapsedMs.ToString());
 
                 _logger.LogInformation(
-                    "Request: {Path}{QueryString} | Client: {ClientIp} | ClientId: {ClientId} | Method: {Method} | Response: {StatusCode}",
+                    "Request: {Path}{QueryString} | Client: {ClientIp} | ClientId: {ClientId} | Method: {Method} | Response: {StatusCode} | Duration: {ElapsedMs}ms",
                     path,
                     queryString,
                     clientIp,
                     clientId,
                     method,
-                    statusCode);
+                    statusCode,
+                    elapsedMs);
 
                 // Reset the response body stream position
                 responseBodyStream.Seek(0, SeekOrigin.Begin);
@@ -62,13 +64,17 @@ namespace CurrencyConverter.Api.Middleware
             }
             catch (Exception ex)
             {
+                stopwatch.Stop();
+                var elapsedMs = stopwatch.ElapsedMilliseconds;
+                
                 _logger.LogError(ex,
-                    "Request failed: {Path}{QueryString} | Client: {ClientIp} | ClientId: {ClientId} | Method: {Method}",
+                    "Request failed: {Path}{QueryString} | Client: {ClientIp} | ClientId: {ClientId} | Method: {Method} | Duration: {ElapsedMs}ms",
                     path,
                     queryString,
                     clientIp,
                     clientId,
-                    method);
+                    method,
+                    elapsedMs);
                 
                 // Restore the original response body stream
                 context.Response.Body = originalBodyStream;

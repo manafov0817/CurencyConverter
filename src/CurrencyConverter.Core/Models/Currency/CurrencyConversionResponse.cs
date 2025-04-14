@@ -1,5 +1,3 @@
-using System;
-
 namespace CurrencyConverter.Core.Models.Currency
 {
     public record CurrencyConversionResponse
