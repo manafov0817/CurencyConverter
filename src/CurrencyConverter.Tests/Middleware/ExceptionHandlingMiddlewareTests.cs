@@ -104,8 +104,8 @@ namespace CurrencyConverter.Tests.Middleware
                 PropertyNameCaseInsensitive = true
             });
 
-            Assert.Equal("Validation failed", error.Message);
-            Assert.Equal(HttpStatusCode.BadRequest, error.StatusCode);
+            Assert.Equal("Validation failed", error?.Message);
+            Assert.Equal(HttpStatusCode.BadRequest, error?.StatusCode);
         }
 
         [Fact]
@@ -170,8 +170,8 @@ namespace CurrencyConverter.Tests.Middleware
                 PropertyNameCaseInsensitive = true
             });
 
-            Assert.Equal("The requested resource was not found.", error.Message);
-            Assert.Equal(HttpStatusCode.NotFound, error.StatusCode);
+            Assert.Equal("The requested resource was not found.", error?.Message);
+            Assert.Equal(HttpStatusCode.NotFound, error?.StatusCode);
         }
 
         [Fact]
