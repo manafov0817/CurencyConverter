@@ -1,8 +1,8 @@
 namespace CurrencyConverter.Core.Models.Currency
 {
-    public record HistoricalRatesRequest
+    public class HistoricalRatesRequest
     {
-        public string BaseCurrency { get; set; }
+        public string BaseCurrency { get; set; } = string.Empty;
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public int Page { get; set; } = 1;

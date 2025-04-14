@@ -39,6 +39,11 @@ namespace CurrencyConverter.Api.Middleware
             
             var response = new ErrorResponse
             {
+                StatusCode = HttpStatusCode.InternalServerError, 
+                Message = _environment.IsDevelopment() 
+                    ? exception.Message 
+                    : "An unexpected error occurred. Please try again later.",
+                DeveloperMessage = exception.ToString(),
                 TraceId = Activity.Current?.Id ?? context.TraceIdentifier
             };
 
@@ -46,36 +51,38 @@ namespace CurrencyConverter.Api.Middleware
             {
                 case KeyNotFoundException:
                     context.Response.StatusCode = (int)HttpStatusCode.NotFound;
-                    response.StatusCode = HttpStatusCode.NotFound;
-                    response.Message = "The requested resource was not found.";
+                    response = new ErrorResponse
+                    {
+                        StatusCode = HttpStatusCode.NotFound,
+                        Message = "The requested resource was not found.",
+                        TraceId = response.TraceId
+                    };
                     break;
                 
                 case UnauthorizedAccessException:
                     context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-                    response.StatusCode = HttpStatusCode.Unauthorized;
-                    response.Message = "Unauthorized access.";
+                    response = new ErrorResponse
+                    {
+                        StatusCode = HttpStatusCode.Unauthorized,
+                        Message = "Unauthorized access.",
+                        TraceId = response.TraceId
+                    };
                     break;
                 
                 case ArgumentException:
                 case FormatException:
                 case ValidationException:
                     context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-                    response.StatusCode = HttpStatusCode.BadRequest;
-                    response.Message = exception.Message;
+                    response = new ErrorResponse
+                    {
+                        StatusCode = HttpStatusCode.BadRequest,
+                        Message = exception.Message,
+                        TraceId = response.TraceId
+                    };
                     break;
                 
                 default:
-                    context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                    response.StatusCode = HttpStatusCode.InternalServerError;
-                    response.Message = _environment.IsDevelopment() 
-                        ? exception.Message 
-                        : "An unexpected error occurred. Please try again later.";
                     break;
-            }
-
-            if (_environment.IsDevelopment())
-            {
-                response.DeveloperMessage = exception.ToString();
             }
 
             var jsonOptions = new JsonSerializerOptions
@@ -88,7 +95,7 @@ namespace CurrencyConverter.Api.Middleware
         }
     }
 
-    public record ErrorResponse
+    public class ErrorResponse
     {
         public HttpStatusCode StatusCode { get; set; }
         public string Message { get; set; } = string.Empty;
