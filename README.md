@@ -363,6 +363,34 @@ The project has extensive test coverage, including:
 - Cache behavior
 - Restricted currency handling
 
+### Generating Test Coverage Reports
+
+While the project is configured with Coverlet for code coverage collection, you'll need to follow these steps to generate human-readable coverage reports locally:
+
+1. Install the ReportGenerator tool:
+   ```
+   dotnet tool install -g dotnet-reportgenerator-globaltool
+   ```
+
+2. Run tests with coverage collection:
+   ```
+   dotnet test --collect:"XPlat Code Coverage"
+   ```
+
+3. Generate an HTML report from the coverage file:
+   ```
+   reportgenerator -reports:"**/coverage.cobertura.xml" -targetdir:"coveragereport" -reporttypes:Html
+   ```
+
+4. Open the generated report:
+   ```
+   start coveragereport/index.html   # On Windows
+   open coveragereport/index.html    # On macOS
+   xdg-open coveragereport/index.html # On Linux
+   ```
+
+This will provide a detailed view of which code is covered by tests and help identify areas that may need additional testing.
+
 ## Error Handling
 
 The API uses a global exception handling middleware that returns consistent error responses:
