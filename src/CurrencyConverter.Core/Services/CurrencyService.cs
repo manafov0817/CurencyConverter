@@ -55,10 +55,10 @@ namespace CurrencyConverter.Core.Services
                 var provider = _providerFactory.GetProvider();
                 rates = await provider.GetLatestRatesAsync(baseCurrency);
 
-                rates.Rates.Remove("TRY");
-                rates.Rates.Remove("PLN");
-                rates.Rates.Remove("THB");
-                rates.Rates.Remove("MXN");
+                foreach (var restrictedCurrency in _restrictedCurrencies)
+                {
+                    rates.Rates.Remove(restrictedCurrency);
+                }
 
                 _cache.Set(cacheKey, rates, TimeSpan.FromHours(1));
             }
@@ -173,10 +173,10 @@ namespace CurrencyConverter.Core.Services
 
             foreach (var date in historicalData.Keys)
             {
-                historicalData[date].Remove("TRY");
-                historicalData[date].Remove("PLN");
-                historicalData[date].Remove("THB");
-                historicalData[date].Remove("MXN");
+                foreach (var restrictedCurrency in _restrictedCurrencies)
+                {
+                    historicalData[date].Remove(restrictedCurrency);
+                }
             }
 
             var allRates = historicalData
@@ -189,20 +189,7 @@ namespace CurrencyConverter.Core.Services
                 .OrderByDescending(r => r.Date)
                 .ToList();
 
-            var totalCount = allRates.Count;
-            var skip = (request.Page - 1) * request.PageSize;
-            var paginatedRates = allRates
-                .Skip(skip)
-                .Take(request.PageSize)
-                .ToList();
-
-            return new PaginatedResponse<HistoricalRate>
-            {
-                Items = paginatedRates,
-                Page = request.Page,
-                PageSize = request.PageSize,
-                TotalCount = totalCount 
-            };
+            return _mapper.Map<PaginatedResponse<HistoricalRate>>((Request: request, AllRates: allRates));
         }
     }
 }
