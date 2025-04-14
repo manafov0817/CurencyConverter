@@ -5,10 +5,6 @@ using MapsterMapper;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Moq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace CurrencyConverter.Tests
@@ -51,7 +47,7 @@ namespace CurrencyConverter.Tests
                     { "EUR", 0.85m },
                     { "GBP", 0.75m },
                     { "JPY", 110.0m },
-                    { "TRY", 8.5m } 
+                    { "TRY", 8.5m }
                 }
             };
 
@@ -62,7 +58,7 @@ namespace CurrencyConverter.Tests
 
             Assert.NotNull(result);
             Assert.Equal(baseCurrency, result.BaseCurrency);
-            Assert.Equal(3, result.Rates.Count); 
+            Assert.Equal(3, result.Rates.Count);
             Assert.False(result.Rates.ContainsKey("TRY"));
             Assert.Equal(0.85m, result.Rates["EUR"]);
         }
@@ -70,7 +66,7 @@ namespace CurrencyConverter.Tests
         [Fact]
         public async Task GetLatestRatesAsync_WithRestrictedCurrency_ThrowsException()
         {
-            var baseCurrency = "TRY"; 
+            var baseCurrency = "TRY";
 
             await Assert.ThrowsAsync<InvalidOperationException>(() =>
                 _service.GetLatestRatesAsync(baseCurrency));
@@ -124,15 +120,15 @@ namespace CurrencyConverter.Tests
             Assert.Equal(request.Amount, result.Amount);
             Assert.Equal(request.FromCurrency, result.FromCurrency);
             Assert.Equal(request.ToCurrency, result.ToCurrency);
-            Assert.Equal(85.0m, result.ConvertedAmount); 
+            Assert.Equal(85.0m, result.ConvertedAmount);
             Assert.Equal(0.85m, result.Rate);
-            
+
             _mockMapper.Verify(m => m.Map<CurrencyConversionResponse>(
                 It.Is<(ExchangeRateResponse Source, decimal Amount, string FromCurrency, string ToCurrency)>(
                     tuple => tuple.Source == conversionResponse &&
                             tuple.Amount == request.Amount &&
                             tuple.FromCurrency == request.FromCurrency &&
-                            tuple.ToCurrency == request.ToCurrency)), 
+                            tuple.ToCurrency == request.ToCurrency)),
                 Times.Once);
         }
 
@@ -143,7 +139,7 @@ namespace CurrencyConverter.Tests
             {
                 Amount = 100,
                 FromCurrency = "USD",
-                ToCurrency = "TRY" 
+                ToCurrency = "TRY"
             };
 
             await Assert.ThrowsAsync<InvalidOperationException>(() =>
@@ -233,12 +229,12 @@ namespace CurrencyConverter.Tests
             foreach (var item in result.Items)
             {
                 Assert.False(item.Rates.ContainsKey("TRY"));
-                Assert.Equal(2, item.Rates.Count); 
+                Assert.Equal(2, item.Rates.Count);
             }
-            
+
             _mockMapper.Verify(m => m.Map<PaginatedResponse<HistoricalRate>>(
                 It.Is<(HistoricalRatesRequest Request, List<HistoricalRate> AllRates)>(
-                    tuple => tuple.Request == request)), 
+                    tuple => tuple.Request == request)),
                 Times.Once);
         }
 
@@ -247,7 +243,7 @@ namespace CurrencyConverter.Tests
         {
             var request = new HistoricalRatesRequest
             {
-                BaseCurrency = "PLN", 
+                BaseCurrency = "PLN",
                 StartDate = new DateTime(2020, 1, 1),
                 EndDate = new DateTime(2020, 1, 5),
                 Page = 1,
