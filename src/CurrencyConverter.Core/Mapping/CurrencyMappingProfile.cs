@@ -7,7 +7,6 @@ namespace CurrencyConverter.Core.Mapping
     {
         public void Register(TypeAdapterConfig config)
         {
-            // 1. ExchangeRateResponse to CurrencyConversionResponse with additional parameters
             config.NewConfig<(ExchangeRateResponse Source, decimal Amount, string FromCurrency, string ToCurrency), CurrencyConversionResponse>()
                 .Map(dest => dest.Amount, src => src.Amount)
                 .Map(dest => dest.FromCurrency, src => src.FromCurrency)
@@ -16,7 +15,6 @@ namespace CurrencyConverter.Core.Mapping
                 .Map(dest => dest.Rate, src => src.Source.Rates[src.ToCurrency])
                 .Map(dest => dest.Date, src => src.Source.Date);
 
-            // 2. Direct mapping from ExchangeRateResponse to CurrencyConversionResponse
             config.NewConfig<ExchangeRateResponse, CurrencyConversionResponse>()
                 .Map(dest => dest.Amount, src => src.Amount)
                 .Map(dest => dest.FromCurrency, src => src.BaseCurrency)
@@ -25,14 +23,12 @@ namespace CurrencyConverter.Core.Mapping
                 .Map(dest => dest.Rate, src => src.Rates.Any() ? src.Rates.Values.FirstOrDefault() : 1)
                 .Map(dest => dest.Date, src => src.Date);
 
-            // 3. CurrencyConversionRequest to ExchangeRateResponse
             config.NewConfig<CurrencyConversionRequest, ExchangeRateResponse>()
                 .Map(dest => dest.Amount, src => src.Amount)
                 .Map(dest => dest.BaseCurrency, src => src.FromCurrency)
                 .Map(dest => dest.Date, _ => DateTime.UtcNow)
                 .Map(dest => dest.Rates, src => new Dictionary<string, decimal> { { src.ToCurrency, 1.0m } });
 
-            // 4. Dictionary<DateTime, Dictionary<string, decimal>> to List<HistoricalRate>
             config.NewConfig<(Dictionary<DateTime, Dictionary<string, decimal>> Data, string BaseCurrency), List<HistoricalRate>>()
                 .MapWith(src => src.Data.Select(kvp => new HistoricalRate
                 {
@@ -41,8 +37,6 @@ namespace CurrencyConverter.Core.Mapping
                     Rates = kvp.Value
                 }).ToList());
 
-            // 5. HistoricalRatesRequest to PaginatedResponse<HistoricalRate>
-            // Fixed: Changed from statement body lambda to expression body lambda
             config.NewConfig<(HistoricalRatesRequest Request, List<HistoricalRate> AllRates), PaginatedResponse<HistoricalRate>>()
                 .MapWith(src => new PaginatedResponse<HistoricalRate>
                 {
@@ -55,8 +49,6 @@ namespace CurrencyConverter.Core.Mapping
                     TotalCount = src.AllRates.Count
                 });
 
-            // 6. Direct mapping from CurrencyConversionRequest to CurrencyConversionResponse
-            // (This would be used when you already have the rate and just need to build the response)
             config.NewConfig<(CurrencyConversionRequest Request, decimal Rate, decimal ConvertedAmount, DateTime Date), CurrencyConversionResponse>()
                 .Map(dest => dest.Amount, src => src.Request.Amount)
                 .Map(dest => dest.FromCurrency, src => src.Request.FromCurrency)

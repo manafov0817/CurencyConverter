@@ -14,20 +14,15 @@ namespace CurrencyConverter.Infrastructure
         public static IServiceCollection AddInfrastructureServices(this IServiceCollection services,
                                                                    IConfiguration configuration)
         {
-            // Register JWT settings
             services.Configure<JwtSettings>(configuration.GetSection("JwtSettings"));
             services.AddSingleton<IJwtTokenService, JwtTokenService>();
 
-            // Register provider factory
             services.AddSingleton<ICurrencyProviderFactory, CurrencyProviderFactory>();
             
-            // Register the FrankfurterApiProvider directly
             services.AddTransient<FrankfurterApiProvider>();
             
-            // Register it as an ICurrencyProvider
             services.AddTransient<ICurrencyProvider, FrankfurterApiProvider>();
 
-            // Configure HttpClient with resilience policies
             services.AddHttpClient<FrankfurterApiProvider>()
                 .AddPolicyHandler((serviceProvider, request) =>
                     CreateResiliencePolicy(serviceProvider.GetRequiredService<ILogger<FrankfurterApiProvider>>()));
@@ -37,7 +32,6 @@ namespace CurrencyConverter.Infrastructure
 
         private static IAsyncPolicy<HttpResponseMessage> CreateResiliencePolicy(ILogger logger)
         {
-            // Retry policy with exponential backoff
             var retryPolicy = HttpPolicyExtensions
                 .HandleTransientHttpError()
                 .WaitAndRetryAsync(
@@ -50,7 +44,6 @@ namespace CurrencyConverter.Infrastructure
                             outcome.Result?.StatusCode, timespan.TotalSeconds, retryAttempt);
                     });
 
-            // Circuit breaker policy
             var circuitBreakerPolicy = HttpPolicyExtensions
                 .HandleTransientHttpError()
                 .CircuitBreakerAsync(
@@ -71,7 +64,6 @@ namespace CurrencyConverter.Infrastructure
                         logger.LogInformation("Circuit breaker half-open. Testing if service is available");
                     });
 
-            // Combine policies
             return Policy.WrapAsync(retryPolicy, circuitBreakerPolicy);
         }
     }

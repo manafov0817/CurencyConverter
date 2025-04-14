@@ -32,12 +32,10 @@ namespace CurrencyConverter.Api.Middleware
             var clientIp = context.Connection.RemoteIpAddress?.ToString();
             var endpoint = context.Request.Path;
 
-            // Use client ID if available, otherwise fall back to IP address
             var requestKey = !string.IsNullOrEmpty(clientId)
                 ? $"RateLimit_{clientId}_{endpoint}"
                 : $"RateLimit_{clientIp}_{endpoint}";
 
-            // Get current count for the client
             if (!_cache.TryGetValue(requestKey, out int requestCount))
             {
                 requestCount = 0;
@@ -61,7 +59,6 @@ namespace CurrencyConverter.Api.Middleware
                 return;
             }
 
-            // Increment the request count and set cache expiration
             _cache.Set(requestKey, requestCount + 1, _timeWindow);
 
             await _next(context);

@@ -29,10 +29,8 @@ namespace CurrencyConverter.Tests
             _mockLogger = new Mock<ILogger<CurrencyService>>();
             _mockMapper = new Mock<IMapper>();
 
-            // Setup real memory cache for testing
             _cache = new MemoryCache(new MemoryCacheOptions());
 
-            // Setup provider factory to return our mock provider
             _mockProviderFactory.Setup(f => f.GetProvider(It.IsAny<string>()))
                 .Returns(_mockProvider.Object);
 
@@ -42,7 +40,6 @@ namespace CurrencyConverter.Tests
         [Fact]
         public async Task GetLatestRatesAsync_WithValidBaseCurrency_ReturnsRates()
         {
-            // Arrange
             var baseCurrency = "USD";
             var expectedResponse = new ExchangeRateResponse
             {
@@ -54,20 +51,18 @@ namespace CurrencyConverter.Tests
                     { "EUR", 0.85m },
                     { "GBP", 0.75m },
                     { "JPY", 110.0m },
-                    { "TRY", 8.5m } // This will be filtered out
+                    { "TRY", 8.5m } 
                 }
             };
 
             _mockProvider.Setup(p => p.GetLatestRatesAsync(baseCurrency))
                 .ReturnsAsync(expectedResponse);
 
-            // Act
             var result = await _service.GetLatestRatesAsync(baseCurrency);
 
-            // Assert
             Assert.NotNull(result);
             Assert.Equal(baseCurrency, result.BaseCurrency);
-            Assert.Equal(3, result.Rates.Count); // TRY should be filtered out
+            Assert.Equal(3, result.Rates.Count); 
             Assert.False(result.Rates.ContainsKey("TRY"));
             Assert.Equal(0.85m, result.Rates["EUR"]);
         }
@@ -75,10 +70,8 @@ namespace CurrencyConverter.Tests
         [Fact]
         public async Task GetLatestRatesAsync_WithRestrictedCurrency_ThrowsException()
         {
-            // Arrange
-            var baseCurrency = "TRY"; // Restricted currency
+            var baseCurrency = "TRY"; 
 
-            // Act & Assert
             await Assert.ThrowsAsync<InvalidOperationException>(() =>
                 _service.GetLatestRatesAsync(baseCurrency));
         }
@@ -86,7 +79,6 @@ namespace CurrencyConverter.Tests
         [Fact]
         public async Task ConvertCurrencyAsync_WithValidRequest_ReturnsConversion()
         {
-            // Arrange
             var request = new CurrencyConversionRequest
             {
                 Amount = 100,
@@ -118,7 +110,6 @@ namespace CurrencyConverter.Tests
             _mockProvider.Setup(p => p.ConvertCurrencyAsync(1, request.FromCurrency, request.ToCurrency))
                 .ReturnsAsync(conversionResponse);
 
-            // Setup mapper to return our expected result
             _mockMapper.Setup(m => m.Map<CurrencyConversionResponse>(
                     It.Is<(ExchangeRateResponse Source, decimal Amount, string FromCurrency, string ToCurrency)>(
                         tuple => tuple.Source == conversionResponse &&
@@ -127,18 +118,15 @@ namespace CurrencyConverter.Tests
                                 tuple.ToCurrency == request.ToCurrency)))
                 .Returns(expectedResult);
 
-            // Act
             var result = await _service.ConvertCurrencyAsync(request);
 
-            // Assert
             Assert.NotNull(result);
             Assert.Equal(request.Amount, result.Amount);
             Assert.Equal(request.FromCurrency, result.FromCurrency);
             Assert.Equal(request.ToCurrency, result.ToCurrency);
-            Assert.Equal(85.0m, result.ConvertedAmount); // 100 * 0.85
+            Assert.Equal(85.0m, result.ConvertedAmount); 
             Assert.Equal(0.85m, result.Rate);
             
-            // Verify mapper was called
             _mockMapper.Verify(m => m.Map<CurrencyConversionResponse>(
                 It.Is<(ExchangeRateResponse Source, decimal Amount, string FromCurrency, string ToCurrency)>(
                     tuple => tuple.Source == conversionResponse &&
@@ -151,15 +139,13 @@ namespace CurrencyConverter.Tests
         [Fact]
         public async Task ConvertCurrencyAsync_WithRestrictedCurrency_ThrowsException()
         {
-            // Arrange
             var request = new CurrencyConversionRequest
             {
                 Amount = 100,
                 FromCurrency = "USD",
-                ToCurrency = "TRY" // Restricted currency
+                ToCurrency = "TRY" 
             };
 
-            // Act & Assert
             await Assert.ThrowsAsync<InvalidOperationException>(() =>
                 _service.ConvertCurrencyAsync(request));
         }
@@ -167,7 +153,6 @@ namespace CurrencyConverter.Tests
         [Fact]
         public async Task GetHistoricalRatesAsync_WithValidRequest_ReturnsPaginatedResult()
         {
-            // Arrange
             var request = new HistoricalRatesRequest
             {
                 BaseCurrency = "USD",
@@ -221,7 +206,6 @@ namespace CurrencyConverter.Tests
                     request.BaseCurrency, request.StartDate, request.EndDate))
                 .ReturnsAsync(historicalData);
 
-            // Setup mapper to return our expected result
             _mockMapper.Setup(m => m.Map<List<HistoricalRate>>(
                     It.Is<(Dictionary<DateTime, Dictionary<string, decimal>> Data, string BaseCurrency)>(
                         tuple => tuple.BaseCurrency == request.BaseCurrency)))
@@ -238,24 +222,20 @@ namespace CurrencyConverter.Tests
                         tuple => tuple.Request == request)))
                 .Returns(expectedResult);
 
-            // Act
             var result = await _service.GetHistoricalRatesAsync(request);
 
-            // Assert
             Assert.NotNull(result);
             Assert.Equal(request.Page, result.Page);
             Assert.Equal(request.PageSize, result.PageSize);
             Assert.Equal(3, result.TotalCount);
             Assert.Equal(2, result.Items.Count());
 
-            // Verify restricted currencies are filtered out
             foreach (var item in result.Items)
             {
                 Assert.False(item.Rates.ContainsKey("TRY"));
-                Assert.Equal(2, item.Rates.Count); // Should have EUR and GBP, but not TRY
+                Assert.Equal(2, item.Rates.Count); 
             }
             
-            // Verify mapper was called
             _mockMapper.Verify(m => m.Map<PaginatedResponse<HistoricalRate>>(
                 It.Is<(HistoricalRatesRequest Request, List<HistoricalRate> AllRates)>(
                     tuple => tuple.Request == request)), 
@@ -265,17 +245,15 @@ namespace CurrencyConverter.Tests
         [Fact]
         public async Task GetHistoricalRatesAsync_WithRestrictedCurrency_ThrowsException()
         {
-            // Arrange
             var request = new HistoricalRatesRequest
             {
-                BaseCurrency = "PLN", // Restricted currency
+                BaseCurrency = "PLN", 
                 StartDate = new DateTime(2020, 1, 1),
                 EndDate = new DateTime(2020, 1, 5),
                 Page = 1,
                 PageSize = 10
             };
 
-            // Act & Assert
             await Assert.ThrowsAsync<InvalidOperationException>(() =>
                 _service.GetHistoricalRatesAsync(request));
         }

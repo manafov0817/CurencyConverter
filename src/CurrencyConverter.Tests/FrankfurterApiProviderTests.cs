@@ -33,7 +33,6 @@ namespace CurrencyConverter.Tests
         [Fact]
         public async Task GetLatestRatesAsync_ReturnsCorrectData()
         {
-            // Arrange
             var baseCurrency = "USD";
             var responseData = new ExchangeRateResponse
             {
@@ -63,10 +62,8 @@ namespace CurrencyConverter.Tests
                     Content = new StringContent(jsonResponse)
                 });
 
-            // Act
             var result = await _provider.GetLatestRatesAsync(baseCurrency);
 
-            // Assert
             Assert.NotNull(result);
             Assert.Equal(baseCurrency, result.BaseCurrency);
             Assert.Equal(2, result.Rates.Count);
@@ -77,7 +74,6 @@ namespace CurrencyConverter.Tests
         [Fact]
         public async Task ConvertCurrencyAsync_ReturnsCorrectConversion()
         {
-            // Arrange
             var amount = 100m;
             var fromCurrency = "USD";
             var toCurrency = "EUR";
@@ -109,10 +105,8 @@ namespace CurrencyConverter.Tests
                     Content = new StringContent(jsonResponse)
                 });
 
-            // Act
             var result = await _provider.ConvertCurrencyAsync(amount, fromCurrency, toCurrency);
 
-            // Assert
             Assert.NotNull(result);
             Assert.Equal(amount, result.Amount);
             Assert.Equal(fromCurrency, result.BaseCurrency);
@@ -123,7 +117,6 @@ namespace CurrencyConverter.Tests
         [Fact]
         public async Task GetHistoricalRatesAsync_ReturnsCorrectData()
         {
-            // Arrange
             var baseCurrency = "USD";
             var startDate = new DateTime(2020, 1, 1);
             var endDate = new DateTime(2020, 1, 5);
@@ -163,18 +156,14 @@ namespace CurrencyConverter.Tests
                     Content = new StringContent(jsonResponse)
                 });
 
-            // Act
             var result = await _provider.GetHistoricalRatesAsync(baseCurrency, startDate, endDate);
 
-            // Assert
             Assert.NotNull(result);
             Assert.Equal(2, result.Count);
 
-            // Verify the dates are parsed correctly
             Assert.True(result.ContainsKey(new DateTime(2020, 1, 1)));
             Assert.True(result.ContainsKey(new DateTime(2020, 1, 2)));
 
-            // Verify the rates are correct
             Assert.Equal(0.85m, result[new DateTime(2020, 1, 1)]["EUR"]);
             Assert.Equal(0.75m, result[new DateTime(2020, 1, 1)]["GBP"]);
             Assert.Equal(0.86m, result[new DateTime(2020, 1, 2)]["EUR"]);
@@ -184,7 +173,6 @@ namespace CurrencyConverter.Tests
         [Fact]
         public async Task GetLatestRatesAsync_WhenApiCallFails_ThrowsException()
         {
-            // Arrange
             var baseCurrency = "USD";
 
             _mockHttpMessageHandler
@@ -198,7 +186,6 @@ namespace CurrencyConverter.Tests
                     StatusCode = HttpStatusCode.InternalServerError
                 });
 
-            // Act & Assert
             await Assert.ThrowsAsync<HttpRequestException>(() =>
                 _provider.GetLatestRatesAsync(baseCurrency));
         }

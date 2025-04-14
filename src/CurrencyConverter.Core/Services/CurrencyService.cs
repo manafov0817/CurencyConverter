@@ -55,13 +55,11 @@ namespace CurrencyConverter.Core.Services
                 var provider = _providerFactory.GetProvider();
                 rates = await provider.GetLatestRatesAsync(baseCurrency);
 
-                // Remove restricted currencies from the response
-                foreach (var restrictedCurrency in _restrictedCurrencies)
-                {
-                    rates.Rates.Remove(restrictedCurrency);
-                }
+                rates.Rates.Remove("TRY");
+                rates.Rates.Remove("PLN");
+                rates.Rates.Remove("THB");
+                rates.Rates.Remove("MXN");
 
-                // Cache for 1 hour
                 _cache.Set(cacheKey, rates, TimeSpan.FromHours(1));
             }
             else
@@ -104,7 +102,6 @@ namespace CurrencyConverter.Core.Services
 
                 conversionData = await provider.ConvertCurrencyAsync(1, request.FromCurrency, request.ToCurrency);
 
-                // Cache for 1 hour
                 _cache.Set(cacheKey, conversionData, TimeSpan.FromHours(1));
             }
             else
@@ -113,7 +110,6 @@ namespace CurrencyConverter.Core.Services
                     request.FromCurrency, request.ToCurrency);
             }
 
-            // Use Mapster to map from the source data to CurrencyConversionResponse
             return _mapper.Map<CurrencyConversionResponse>((
                 Source: conversionData,
                 Amount: request.Amount,
@@ -167,7 +163,6 @@ namespace CurrencyConverter.Core.Services
                 var provider = _providerFactory.GetProvider();
                 historicalData = await provider.GetHistoricalRatesAsync(request.BaseCurrency, request.StartDate, request.EndDate);
 
-                // Cache for 24 hours as historical data doesn't change
                 _cache.Set(cacheKey, historicalData, TimeSpan.FromHours(24));
             }
             else
@@ -176,16 +171,14 @@ namespace CurrencyConverter.Core.Services
                     request.BaseCurrency, request.StartDate.ToString("yyyy-MM-dd"), request.EndDate.ToString("yyyy-MM-dd"));
             }
 
-            // Remove restricted currencies from all historical rates
             foreach (var date in historicalData.Keys)
             {
-                foreach (var restrictedCurrency in _restrictedCurrencies)
-                {
-                    historicalData[date].Remove(restrictedCurrency);
-                }
+                historicalData[date].Remove("TRY");
+                historicalData[date].Remove("PLN");
+                historicalData[date].Remove("THB");
+                historicalData[date].Remove("MXN");
             }
 
-            // Convert to list for pagination
             var allRates = historicalData
                 .Select(kvp => new HistoricalRate
                 {
@@ -196,7 +189,6 @@ namespace CurrencyConverter.Core.Services
                 .OrderByDescending(r => r.Date)
                 .ToList();
 
-            // Apply pagination
             var totalCount = allRates.Count;
             var skip = (request.Page - 1) * request.PageSize;
             var paginatedRates = allRates

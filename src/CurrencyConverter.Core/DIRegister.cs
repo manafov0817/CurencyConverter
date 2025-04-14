@@ -9,10 +9,8 @@ namespace CurrencyConverter.Core
     {
         public static IServiceCollection AddCoreServices(this IServiceCollection services)
         {
-            // Register core services
             services.AddScoped<ICurrencyService, CurrencyService>();
             
-            // Register Mapster
             services.AddMapster();
 
             return services;

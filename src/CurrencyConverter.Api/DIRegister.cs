@@ -13,7 +13,6 @@ namespace CurrencyConverter.Api
     {
         public static IServiceCollection AddApiServices(this IServiceCollection services, IConfiguration configuration)
         {
-            // Configure API controllers
             services.AddControllers()
                 .AddJsonOptions(options =>
                 {
@@ -22,13 +21,10 @@ namespace CurrencyConverter.Api
                     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
                 });
 
-            // Configure JWT Authentication
             ConfigureAuthentication(services, configuration);
 
-            // Configure Swagger
             ConfigureSwagger(services);
 
-            // Configure API Versioning
             services.AddApiVersioning(options =>
             {
                 options.ReportApiVersions = true;
@@ -37,17 +33,14 @@ namespace CurrencyConverter.Api
                 options.ApiVersionReader = new Microsoft.AspNetCore.Mvc.Versioning.UrlSegmentApiVersionReader();
             });
 
-            // Add API version explorer to enable Swagger to understand versioning
             services.AddVersionedApiExplorer(options =>
             {
                 options.GroupNameFormat = "'v'VVV";
                 options.SubstituteApiVersionInUrl = true;
             });
 
-            // Configure Memory Cache for rate limiting and data caching
             services.AddMemoryCache();
 
-            // Configure OpenTelemetry for distributed tracing
             services.AddOpenTelemetry()
                 .WithTracing(tracing => tracing
                     .AddAspNetCoreInstrumentation()
@@ -58,7 +51,6 @@ namespace CurrencyConverter.Api
 
         public static IApplicationBuilder UseApiMiddleware(this IApplicationBuilder app)
         {
-            // Add custom middleware
             app.UseMiddleware<ExceptionHandlingMiddleware>();
             app.UseMiddleware<RequestLoggingMiddleware>();
             app.UseMiddleware<RateLimitingMiddleware>();
@@ -98,7 +90,6 @@ namespace CurrencyConverter.Api
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Currency Converter API", Version = "v1" });
 
-                // Configure Swagger to use JWT Authentication
                 c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
                     Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",

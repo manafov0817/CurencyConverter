@@ -24,23 +24,19 @@ namespace CurrencyConverter.Api.Middleware
             var path = context.Request.Path;
             var queryString = context.Request.QueryString.ToString();
 
-            // Store the original response body stream
             var originalBodyStream = context.Response.Body;
 
             try
             {
-                // Create a new memory stream for the response
                 using var responseBodyStream = new MemoryStream();
                 context.Response.Body = responseBodyStream;
 
-                // Call the next middleware in the pipeline
                 await _next(context);
 
                 stopwatch.Stop();
                 var statusCode = context.Response.StatusCode;
                 var elapsedMs = stopwatch.ElapsedMilliseconds;
 
-                // Add timing header to response (useful for client-side monitoring)
                 context.Response.Headers.Add("X-Response-Time-Ms", elapsedMs.ToString());
 
                 _logger.LogInformation(
@@ -53,13 +49,10 @@ namespace CurrencyConverter.Api.Middleware
                     statusCode,
                     elapsedMs);
 
-                // Reset the response body stream position
                 responseBodyStream.Seek(0, SeekOrigin.Begin);
 
-                // Copy the response body to the original stream and to the response
                 await responseBodyStream.CopyToAsync(originalBodyStream);
                 
-                // Restore the original response body stream
                 context.Response.Body = originalBodyStream;
             }
             catch (Exception ex)
@@ -76,7 +69,6 @@ namespace CurrencyConverter.Api.Middleware
                     method,
                     elapsedMs);
                 
-                // Restore the original response body stream
                 context.Response.Body = originalBodyStream;
                 
                 throw;

@@ -6,7 +6,6 @@ using Serilog.Events;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure Serilog
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
     .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
@@ -17,7 +16,6 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
  
-// Register services using the DIRegister extension methods
 builder.Services
     .AddCoreServices()
     .AddInfrastructureServices(builder.Configuration)
@@ -25,17 +23,15 @@ builder.Services
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 app.UseSwagger();
 app.UseSwaggerUI(options =>
 {
     options.SwaggerEndpoint("/swagger/v1/swagger.json", "Currency Converter API V1");
-    options.RoutePrefix = string.Empty; // Set Swagger UI at the root
+    options.RoutePrefix = string.Empty; 
 });
 
 app.UseHttpsRedirection();
 
-// Use custom middleware from DIRegister
 app.UseApiMiddleware();
 
 app.UseAuthentication();

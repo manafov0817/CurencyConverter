@@ -73,7 +73,6 @@ namespace CurrencyConverter.Api.Middleware
                     break;
             }
 
-            // Include exception details in development environment
             if (_environment.IsDevelopment())
             {
                 response.DeveloperMessage = exception.ToString();
@@ -97,7 +96,6 @@ namespace CurrencyConverter.Api.Middleware
         public string? TraceId { get; set; }
     }
 
-    // Custom exception for validation errors
     public class ValidationException : Exception
     {
         public ValidationException(string message) : base(message) { }

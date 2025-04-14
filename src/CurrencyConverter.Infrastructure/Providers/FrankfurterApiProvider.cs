@@ -26,7 +26,6 @@ namespace CurrencyConverter.Infrastructure.Providers
         {
             try
             {
-                _logger.LogInformation("Fetching latest rates for base currency: {BaseCurrency}", baseCurrency);
                 var response = await _httpClient.GetFromJsonAsync<ExchangeRateResponse>($"/latest?from={baseCurrency}");
                 return response;
             }
@@ -43,7 +42,6 @@ namespace CurrencyConverter.Infrastructure.Providers
         {
             try
             {
-                _logger.LogInformation("Converting {Amount} from {FromCurrency} to {ToCurrency}", amount, fromCurrency, toCurrency);
                 var response = await _httpClient.GetFromJsonAsync<ExchangeRateResponse>($"/latest?amount={amount}&from={fromCurrency}&to={toCurrency}");
                 return response;
             }
@@ -61,9 +59,6 @@ namespace CurrencyConverter.Infrastructure.Providers
         {
             try
             {
-                _logger.LogInformation("Fetching historical rates for base currency: {BaseCurrency} from {StartDate} to {EndDate}",
-                    baseCurrency, startDate.ToString("yyyy-MM-dd"), endDate.ToString("yyyy-MM-dd"));
-
                 var url = $"/{startDate.ToString("yyyy-MM-dd")}..{endDate.ToString("yyyy-MM-dd")}?from={baseCurrency}";
                 var response = await _httpClient.GetAsync(url);
                 response.EnsureSuccessStatusCode();
