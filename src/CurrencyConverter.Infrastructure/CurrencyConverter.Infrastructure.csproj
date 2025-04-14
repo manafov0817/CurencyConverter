@@ -1,16 +1,28 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Caching\" />
     <Folder Include="Security\" />
-    <Folder Include="Repositories\" />
     <Folder Include="Providers\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.14" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="7.0.14" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="7.0.1" />
+    <PackageReference Include="Polly" Version="7.2.4" />
+    <PackageReference Include="Polly.Extensions.Http" Version="3.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CurrencyConverter.Core\CurrencyConverter.Core.csproj" />
   </ItemGroup>
 
 </Project>
