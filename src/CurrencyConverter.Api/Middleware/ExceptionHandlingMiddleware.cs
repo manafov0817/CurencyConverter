@@ -82,6 +82,7 @@ namespace CurrencyConverter.Api.Middleware
                     break;
                 
                 default:
+                    context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
                     break;
             }
 
