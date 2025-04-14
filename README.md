@@ -28,11 +28,33 @@ The project follows Clean Architecture principles with the following layers:
 - **Core Layer**: Business logic, domain models, and interfaces
 - **Infrastructure Layer**: External service integrations, caching, security, and data access
 
+### Why Clean Architecture?
+
+This architecture was chosen for several key benefits:
+
+1. **Separation of Concerns**: Each layer has a distinct responsibility, making the codebase more maintainable and easier to understand.
+
+2. **Dependency Rule**: Dependencies flow inward, with the Core layer having no dependencies on outer layers. This ensures that business logic remains independent of implementation details.
+
+3. **Testability**: The use of interfaces and dependency injection makes the code highly testable, allowing for effective unit testing without external dependencies.
+
+4. **Flexibility**: The architecture allows for easy replacement of external components (like the currency provider) without affecting the core business logic.
+
+5. **Scalability**: As the application grows, new features can be added without significant refactoring of existing code.
+
+### Key Design Patterns
+
+- **Repository Pattern**: Abstracts data access logic
+- **Factory Pattern**: Used for creating appropriate currency providers
+- **Dependency Injection**: Used throughout the application for loose coupling
+- **Options Pattern**: Used for configuration management (e.g., restricted currencies)
+- **Mediator Pattern**: Simplifies communication between components
+
 ## Getting Started
 
 ### Prerequisites
 
-- .NET 7.0 SDK or later
+- .NET 9.0 SDK or later
 - Visual Studio 2022 or any preferred IDE
 
 ### Installation
@@ -293,6 +315,51 @@ GET /api/currency/historical?baseCurrency=EUR&startDate=2025-01-01&endDate=2025-
 }
 ```
 
+## Testing
+
+The project includes a comprehensive testing strategy with multiple test types:
+
+### Unit Tests
+
+Unit tests focus on testing individual components in isolation, using mocks for dependencies. The project includes:
+
+- **Service Tests**: Verify the business logic in the Core layer
+- **Provider Tests**: Ensure correct interaction with external APIs
+- **Error Handling Tests**: Validate proper exception handling
+- **Edge Case Tests**: Test boundary conditions and input validation
+
+### Integration Tests
+
+Integration tests verify that different components work correctly together:
+
+- **API Provider Tests**: Test the actual integration with the Frankfurter API
+- **End-to-End Flows**: Verify complete business processes from request to response
+
+### Test Architecture
+
+The testing approach follows these principles:
+
+1. **Arrange-Act-Assert (AAA)**: Tests are structured with clear setup, execution, and verification phases
+2. **Isolation**: Unit tests are isolated from external dependencies using mocking
+3. **Comprehensive Coverage**: Tests cover happy paths, error conditions, and edge cases
+4. **Maintainability**: Tests are designed to be readable and maintainable
+
+Run the tests using the following command:
+
+```
+dotnet test
+```
+
+### Test Coverage
+
+The project has extensive test coverage, including:
+
+- Core business logic in CurrencyService
+- External API integration in FrankfurterApiProvider
+- Input validation and error handling
+- Cache behavior
+- Restricted currency handling
+
 ## Error Handling
 
 The API uses a global exception handling middleware that returns consistent error responses:
@@ -378,25 +445,13 @@ var historicalResponse = await client.GetAsync(
     "https://localhost:5001/api/currency/historical?baseCurrency=EUR&startDate=2025-01-01&endDate=2025-01-31&page=1&pageSize=5");
 var historicalResult = await historicalResponse.Content.ReadAsStringAsync();
 
-## Testing
-
-Run the tests using the following command:
-
-```
-dotnet test
-```
-
-The project includes:
-- Unit tests for services and providers
-- Integration tests for API endpoints
-- Test coverage reports
-
 ## Assumptions
 
 1. The Frankfurter API is the primary data source for exchange rates
-2. Restricted currencies (TRY, PLN, THB, MXN) are excluded from all operations
+2. Restricted currencies (TRY, PLN, THB, MXN) are managed through configuration rather than hardcoded
 3. JWT authentication is sufficient for the API's security requirements
 4. In-memory caching is adequate for the current scale of operations
+5. The application requires high test coverage to ensure reliability
 
 ## Future Enhancements
 

@@ -19,6 +19,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CurrencyConverter.IntegrationTests", "src\CurrencyConverter.IntegrationTests\CurrencyConverter.IntegrationTests.csproj", "{F99287F0-4A89-4965-9AB1-E00347916229}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -41,6 +43,10 @@ Global
 		{1F8C09B0-E566-48C4-A762-6B49F0DF0B3E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1F8C09B0-E566-48C4-A762-6B49F0DF0B3E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1F8C09B0-E566-48C4-A762-6B49F0DF0B3E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F99287F0-4A89-4965-9AB1-E00347916229}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F99287F0-4A89-4965-9AB1-E00347916229}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F99287F0-4A89-4965-9AB1-E00347916229}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F99287F0-4A89-4965-9AB1-E00347916229}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -50,6 +56,7 @@ Global
 		{AA33D616-0220-4400-9956-B4729B568F9B} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{2DAA768B-8890-441E-83B5-E46F82AE0D21} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{1F8C09B0-E566-48C4-A762-6B49F0DF0B3E} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{F99287F0-4A89-4965-9AB1-E00347916229} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4DDF909B-572B-4F24-A030-9B4E8D9E479D}
