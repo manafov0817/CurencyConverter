@@ -2,8 +2,11 @@ using CurrencyConverter.Infrastructure.Providers;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Moq.Protected;
+using System;
 using System.Net;
 using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace CurrencyConverter.Tests
@@ -48,8 +51,8 @@ namespace CurrencyConverter.Tests
                 });
 
             // Act & Assert
-            await Assert.ThrowsAsync<HttpRequestException>(() =>
-                _provider.ConvertCurrencyAsync(amount, fromCurrency, toCurrency));
+            await Assert.ThrowsAsync<HttpRequestException>(
+                () => _provider.ConvertCurrencyAsync(amount, fromCurrency, toCurrency));
         }
 
         [Fact]
@@ -72,8 +75,8 @@ namespace CurrencyConverter.Tests
                 });
 
             // Act & Assert
-            await Assert.ThrowsAsync<HttpRequestException>(() =>
-                _provider.GetHistoricalRatesAsync(baseCurrency, startDate, endDate));
+            await Assert.ThrowsAsync<HttpRequestException>(
+                () => _provider.GetHistoricalRatesAsync(baseCurrency, startDate, endDate));
         }
 
         [Fact]
@@ -96,8 +99,8 @@ namespace CurrencyConverter.Tests
                 });
 
             // Act & Assert
-            await Assert.ThrowsAsync<JsonException>(() =>
-                _provider.GetLatestRatesAsync(baseCurrency));
+            await Assert.ThrowsAsync<JsonException>(
+                () => _provider.GetLatestRatesAsync(baseCurrency));
         }
 
         [Fact]
@@ -122,8 +125,8 @@ namespace CurrencyConverter.Tests
                 });
 
             // Act & Assert
-            await Assert.ThrowsAsync<JsonException>(() =>
-                _provider.ConvertCurrencyAsync(amount, fromCurrency, toCurrency));
+            await Assert.ThrowsAsync<JsonException>(
+                () => _provider.ConvertCurrencyAsync(amount, fromCurrency, toCurrency));
         }
 
         [Fact]
@@ -148,8 +151,8 @@ namespace CurrencyConverter.Tests
                 });
 
             // Act & Assert
-            await Assert.ThrowsAsync<JsonException>(() =>
-                _provider.GetHistoricalRatesAsync(baseCurrency, startDate, endDate));
+            await Assert.ThrowsAsync<JsonException>(
+                () => _provider.GetHistoricalRatesAsync(baseCurrency, startDate, endDate));
         }
     }
 }

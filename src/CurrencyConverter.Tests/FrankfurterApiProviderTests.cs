@@ -3,8 +3,12 @@ using CurrencyConverter.Infrastructure.Providers;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Moq.Protected;
+using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace CurrencyConverter.Tests
