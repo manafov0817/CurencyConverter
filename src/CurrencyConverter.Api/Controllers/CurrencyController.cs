@@ -1,9 +1,8 @@
 using CurrencyConverter.Core.Interfaces;
-using CurrencyConverter.Core.Models;
+using CurrencyConverter.Core.Models.Currency;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
-using System.Diagnostics;
 
 namespace CurrencyConverter.Api.Controllers
 {
@@ -25,50 +24,19 @@ namespace CurrencyConverter.Api.Controllers
         [Authorize(Roles = "User,Admin")]
         public async Task<IActionResult> GetLatestRates([Required][FromQuery] string baseCurrency)
         {
-            var stopwatch = Stopwatch.StartNew();
-            var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
-            var clientId = User.FindFirst("ClientId")?.Value ?? "Unknown";
-
-            try
+            if (string.IsNullOrEmpty(baseCurrency))
             {
-                if (string.IsNullOrEmpty(baseCurrency))
-                {
-                    return BadRequest("Base currency is required");
-                }
-
-                var restrictedCurrencies = new[] { "TRY", "PLN", "THB", "MXN" };
-                if (Array.Exists(restrictedCurrencies, c => c.Equals(baseCurrency, StringComparison.OrdinalIgnoreCase)))
-                {
-                    return BadRequest($"Currency {baseCurrency} is restricted and cannot be used");
-                }
-
-                var result = await _currencyService.GetLatestRatesAsync(baseCurrency);
-
-                stopwatch.Stop();
-                _logger.LogInformation(
-                    "Request: GET /api/currency/rates | Client: {ClientIp} | ClientId: {ClientId} | Method: GET | Response: 200 | Time: {ElapsedMs}ms",
-                    clientIp, clientId, stopwatch.ElapsedMilliseconds);
-
-                return Ok(result);
+                return BadRequest("Base currency is required");
             }
-            catch (InvalidOperationException ex)
+
+            var restrictedCurrencies = new[] { "TRY", "PLN", "THB", "MXN" };
+            if (Array.Exists(restrictedCurrencies, c => c.Equals(baseCurrency, StringComparison.OrdinalIgnoreCase)))
             {
-                stopwatch.Stop();
-                _logger.LogWarning(
-                    "Request: GET /api/currency/rates | Client: {ClientIp} | ClientId: {ClientId} | Method: GET | Response: 400 | Time: {ElapsedMs}ms | Error: {ErrorMessage}",
-                    clientIp, clientId, stopwatch.ElapsedMilliseconds, ex.Message);
-
-                return BadRequest(ex.Message);
+                return BadRequest($"Currency {baseCurrency} is restricted and cannot be used");
             }
-            catch (Exception ex)
-            {
-                stopwatch.Stop();
-                _logger.LogError(ex,
-                    "Request: GET /api/currency/rates | Client: {ClientIp} | ClientId: {ClientId} | Method: GET | Response: 500 | Time: {ElapsedMs}ms",
-                    clientIp, clientId, stopwatch.ElapsedMilliseconds);
 
-                return StatusCode(500, "An error occurred while processing your request");
-            }
+            var result = await _currencyService.GetLatestRatesAsync(baseCurrency);
+            return Ok(result);
         }
 
         [HttpGet("convert")]
@@ -78,63 +46,32 @@ namespace CurrencyConverter.Api.Controllers
             [Required][FromQuery] string fromCurrency,
             [Required][FromQuery] string toCurrency)
         {
-            var stopwatch = Stopwatch.StartNew();
-            var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
-            var clientId = User.FindFirst("ClientId")?.Value ?? "Unknown";
-
-            try
+            if (amount <= 0)
             {
-                if (amount <= 0)
-                {
-                    return BadRequest("Amount must be greater than zero");
-                }
-
-                if (string.IsNullOrEmpty(fromCurrency) || string.IsNullOrEmpty(toCurrency))
-                {
-                    return BadRequest("Source and target currencies must be specified");
-                }
-
-                var restrictedCurrencies = new[] { "TRY", "PLN", "THB", "MXN" };
-                if (Array.Exists(restrictedCurrencies, c => c.Equals(fromCurrency, StringComparison.OrdinalIgnoreCase)) ||
-                    Array.Exists(restrictedCurrencies, c => c.Equals(toCurrency, StringComparison.OrdinalIgnoreCase)))
-                {
-                    return BadRequest("Restricted currencies cannot be used in conversion");
-                }
-
-                var request = new CurrencyConversionRequest
-                {
-                    Amount = amount,
-                    FromCurrency = fromCurrency,
-                    ToCurrency = toCurrency
-                };
-
-                var result = await _currencyService.ConvertCurrencyAsync(request);
-
-                stopwatch.Stop();
-                _logger.LogInformation(
-                    "Request: GET /api/currency/convert | Client: {ClientIp} | ClientId: {ClientId} | Method: GET | Response: 200 | Time: {ElapsedMs}ms",
-                    clientIp, clientId, stopwatch.ElapsedMilliseconds);
-
-                return Ok(result);
+                return BadRequest("Amount must be greater than zero");
             }
-            catch (InvalidOperationException ex)
+
+            if (string.IsNullOrEmpty(fromCurrency) || string.IsNullOrEmpty(toCurrency))
             {
-                stopwatch.Stop();
-                _logger.LogWarning(
-                    "Request: GET /api/currency/convert | Client: {ClientIp} | ClientId: {ClientId} | Method: GET | Response: 400 | Time: {ElapsedMs}ms | Error: {ErrorMessage}",
-                    clientIp, clientId, stopwatch.ElapsedMilliseconds, ex.Message);
-
-                return BadRequest(ex.Message);
+                return BadRequest("Source and target currencies must be specified");
             }
-            catch (Exception ex)
+
+            var restrictedCurrencies = new[] { "TRY", "PLN", "THB", "MXN" };
+            if (Array.Exists(restrictedCurrencies, c => c.Equals(fromCurrency, StringComparison.OrdinalIgnoreCase)) ||
+                Array.Exists(restrictedCurrencies, c => c.Equals(toCurrency, StringComparison.OrdinalIgnoreCase)))
             {
-                stopwatch.Stop();
-                _logger.LogError(ex,
-                    "Request: GET /api/currency/convert | Client: {ClientIp} | ClientId: {ClientId} | Method: GET | Response: 500 | Time: {ElapsedMs}ms",
-                    clientIp, clientId, stopwatch.ElapsedMilliseconds);
-
-                return StatusCode(500, "An error occurred while processing your request");
+                return BadRequest("Restricted currencies cannot be used in conversion");
             }
+
+            var request = new CurrencyConversionRequest
+            {
+                Amount = amount,
+                FromCurrency = fromCurrency,
+                ToCurrency = toCurrency
+            };
+
+            var result = await _currencyService.ConvertCurrencyAsync(request);
+            return Ok(result);
         }
 
         [HttpGet("historical")]
@@ -146,74 +83,43 @@ namespace CurrencyConverter.Api.Controllers
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 10)
         {
-            var stopwatch = Stopwatch.StartNew();
-            var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
-            var clientId = User.FindFirst("ClientId")?.Value ?? "Unknown";
-
-            try
+            if (string.IsNullOrEmpty(baseCurrency))
             {
-                if (string.IsNullOrEmpty(baseCurrency))
-                {
-                    return BadRequest("Base currency is required");
-                }
-
-                var restrictedCurrencies = new[] { "TRY", "PLN", "THB", "MXN" };
-                if (Array.Exists(restrictedCurrencies, c => c.Equals(baseCurrency, StringComparison.OrdinalIgnoreCase)))
-                {
-                    return BadRequest($"Currency {baseCurrency} is restricted and cannot be used");
-                }
-
-                if (startDate > endDate)
-                {
-                    return BadRequest("Start date must be before or equal to end date");
-                }
-
-                if (page < 1)
-                {
-                    page = 1;
-                }
-
-                if (pageSize < 1)
-                {
-                    pageSize = 10;
-                }
-
-                var request = new HistoricalRatesRequest
-                {
-                    BaseCurrency = baseCurrency,
-                    StartDate = startDate,
-                    EndDate = endDate,
-                    Page = page,
-                    PageSize = pageSize
-                };
-
-                var result = await _currencyService.GetHistoricalRatesAsync(request);
-
-                stopwatch.Stop();
-                _logger.LogInformation(
-                    "Request: GET /api/currency/historical | Client: {ClientIp} | ClientId: {ClientId} | Method: GET | Response: 200 | Time: {ElapsedMs}ms",
-                    clientIp, clientId, stopwatch.ElapsedMilliseconds);
-
-                return Ok(result);
+                return BadRequest("Base currency is required");
             }
-            catch (InvalidOperationException ex)
+
+            var restrictedCurrencies = new[] { "TRY", "PLN", "THB", "MXN" };
+            if (Array.Exists(restrictedCurrencies, c => c.Equals(baseCurrency, StringComparison.OrdinalIgnoreCase)))
             {
-                stopwatch.Stop();
-                _logger.LogWarning(
-                    "Request: GET /api/currency/historical | Client: {ClientIp} | ClientId: {ClientId} | Method: GET | Response: 400 | Time: {ElapsedMs}ms | Error: {ErrorMessage}",
-                    clientIp, clientId, stopwatch.ElapsedMilliseconds, ex.Message);
-
-                return BadRequest(ex.Message);
+                return BadRequest($"Currency {baseCurrency} is restricted and cannot be used");
             }
-            catch (Exception ex)
+
+            if (startDate > endDate)
             {
-                stopwatch.Stop();
-                _logger.LogError(ex,
-                    "Request: GET /api/currency/historical | Client: {ClientIp} | ClientId: {ClientId} | Method: GET | Response: 500 | Time: {ElapsedMs}ms",
-                    clientIp, clientId, stopwatch.ElapsedMilliseconds);
-
-                return StatusCode(500, "An error occurred while processing your request");
+                return BadRequest("Start date must be before or equal to end date");
             }
+
+            if (page < 1)
+            {
+                page = 1;
+            }
+
+            if (pageSize < 1)
+            {
+                pageSize = 10;
+            }
+
+            var request = new HistoricalRatesRequest
+            {
+                BaseCurrency = baseCurrency,
+                StartDate = startDate,
+                EndDate = endDate,
+                Page = page,
+                PageSize = pageSize
+            };
+
+            var result = await _currencyService.GetHistoricalRatesAsync(request);
+            return Ok(result);
         }
     }
 }

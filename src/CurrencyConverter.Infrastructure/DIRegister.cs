@@ -20,9 +20,15 @@ namespace CurrencyConverter.Infrastructure
 
             // Register provider factory
             services.AddSingleton<ICurrencyProviderFactory, CurrencyProviderFactory>();
+            
+            // Register the FrankfurterApiProvider directly
+            services.AddTransient<FrankfurterApiProvider>();
+            
+            // Register it as an ICurrencyProvider
+            services.AddTransient<ICurrencyProvider, FrankfurterApiProvider>();
 
             // Configure HttpClient with resilience policies
-            services.AddHttpClient<ICurrencyProvider, FrankfurterApiProvider>()
+            services.AddHttpClient<FrankfurterApiProvider>()
                 .AddPolicyHandler((serviceProvider, request) =>
                     CreateResiliencePolicy(serviceProvider.GetRequiredService<ILogger<FrankfurterApiProvider>>()));
 

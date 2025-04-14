@@ -4,9 +4,6 @@ using CurrencyConverter.Core.Services;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Moq;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace CurrencyConverter.Tests
@@ -24,14 +21,14 @@ namespace CurrencyConverter.Tests
             _mockProviderFactory = new Mock<ICurrencyProviderFactory>();
             _mockProvider = new Mock<ICurrencyProvider>();
             _mockLogger = new Mock<ILogger<CurrencyService>>();
-            
+
             // Setup real memory cache for testing
             _cache = new MemoryCache(new MemoryCacheOptions());
-            
+
             // Setup provider factory to return our mock provider
             _mockProviderFactory.Setup(f => f.GetProvider(It.IsAny<string>()))
                 .Returns(_mockProvider.Object);
-            
+
             _service = new CurrencyService(_mockProviderFactory.Object, _cache, _mockLogger.Object);
         }
 
@@ -75,7 +72,7 @@ namespace CurrencyConverter.Tests
             var baseCurrency = "TRY"; // Restricted currency
 
             // Act & Assert
-            await Assert.ThrowsAsync<InvalidOperationException>(() => 
+            await Assert.ThrowsAsync<InvalidOperationException>(() =>
                 _service.GetLatestRatesAsync(baseCurrency));
         }
 
@@ -128,7 +125,7 @@ namespace CurrencyConverter.Tests
             };
 
             // Act & Assert
-            await Assert.ThrowsAsync<InvalidOperationException>(() => 
+            await Assert.ThrowsAsync<InvalidOperationException>(() =>
                 _service.ConvertCurrencyAsync(request));
         }
 
@@ -147,17 +144,17 @@ namespace CurrencyConverter.Tests
 
             var historicalData = new Dictionary<DateTime, Dictionary<string, decimal>>
             {
-                { 
-                    new DateTime(2020, 1, 1), 
-                    new Dictionary<string, decimal> { { "EUR", 0.85m }, { "GBP", 0.75m }, { "TRY", 8.5m } } 
+                {
+                    new DateTime(2020, 1, 1),
+                    new Dictionary<string, decimal> { { "EUR", 0.85m }, { "GBP", 0.75m }, { "TRY", 8.5m } }
                 },
-                { 
-                    new DateTime(2020, 1, 2), 
-                    new Dictionary<string, decimal> { { "EUR", 0.86m }, { "GBP", 0.76m }, { "TRY", 8.6m } } 
+                {
+                    new DateTime(2020, 1, 2),
+                    new Dictionary<string, decimal> { { "EUR", 0.86m }, { "GBP", 0.76m }, { "TRY", 8.6m } }
                 },
-                { 
-                    new DateTime(2020, 1, 3), 
-                    new Dictionary<string, decimal> { { "EUR", 0.87m }, { "GBP", 0.77m }, { "TRY", 8.7m } } 
+                {
+                    new DateTime(2020, 1, 3),
+                    new Dictionary<string, decimal> { { "EUR", 0.87m }, { "GBP", 0.77m }, { "TRY", 8.7m } }
                 }
             };
 
@@ -174,7 +171,7 @@ namespace CurrencyConverter.Tests
             Assert.Equal(request.PageSize, result.PageSize);
             Assert.Equal(3, result.TotalCount);
             Assert.Equal(2, result.Items.Count());
-            
+
             // Verify restricted currencies are filtered out
             foreach (var item in result.Items)
             {
@@ -197,7 +194,7 @@ namespace CurrencyConverter.Tests
             };
 
             // Act & Assert
-            await Assert.ThrowsAsync<InvalidOperationException>(() => 
+            await Assert.ThrowsAsync<InvalidOperationException>(() =>
                 _service.GetHistoricalRatesAsync(request));
         }
     }

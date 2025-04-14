@@ -1,4 +1,4 @@
-using CurrencyConverter.Api.DependencyInjection;
+using CurrencyConverter.Api;
 using CurrencyConverter.Core;
 using CurrencyConverter.Infrastructure;
 using Serilog;
@@ -16,7 +16,7 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 
 builder.Host.UseSerilog();
-
+ 
 // Register services using the DIRegister extension methods
 builder.Services
     .AddCoreServices()
@@ -26,11 +26,12 @@ builder.Services
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+app.UseSwagger();
+app.UseSwaggerUI(options =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "Currency Converter API V1");
+    options.RoutePrefix = string.Empty; // Set Swagger UI at the root
+});
 
 app.UseHttpsRedirection();
 

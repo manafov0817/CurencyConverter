@@ -1,4 +1,4 @@
-using CurrencyConverter.Api.Models;
+using CurrencyConverter.Api.Models.Auth;
 using CurrencyConverter.Infrastructure.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -7,7 +7,8 @@ using System.Diagnostics;
 namespace CurrencyConverter.Api.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/[controller]")]
     public class AuthController : ControllerBase
     {
         private readonly IJwtTokenService _jwtTokenService;
@@ -21,9 +22,8 @@ namespace CurrencyConverter.Api.Controllers
                 { "user", ("user123", new List<string> { "User" }) },
             };
 
-        public AuthController(
-            IJwtTokenService jwtTokenService,
-            ILogger<AuthController> logger)
+        public AuthController(IJwtTokenService jwtTokenService,
+                              ILogger<AuthController> logger)
         {
             _jwtTokenService = jwtTokenService ?? throw new ArgumentNullException(nameof(jwtTokenService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -36,66 +36,47 @@ namespace CurrencyConverter.Api.Controllers
             var stopwatch = Stopwatch.StartNew();
             var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
 
-            try
+            if (string.IsNullOrEmpty(request.Username) || string.IsNullOrEmpty(request.Password))
             {
-                if (
-                    string.IsNullOrEmpty(request.Username) || string.IsNullOrEmpty(request.Password)
-                )
-                {
-                    return BadRequest("Username and password are required");
-                }
-
-                if (
-                    !_users.TryGetValue(request.Username, out var userInfo)
-                    || userInfo.password != request.Password
-                )
-                {
-                    stopwatch.Stop();
-                    _logger.LogWarning(
-                        "Failed login attempt for user {Username} from {ClientIp} | Time: {ElapsedMs}ms",
-                        request.Username,
-                        clientIp,
-                        stopwatch.ElapsedMilliseconds
-                    );
-
-                    return Unauthorized("Invalid username or password");
-                }
-
-                var clientId = Guid.NewGuid().ToString();
-                var token = _jwtTokenService.GenerateToken(
-                    request.Username,
-                    clientId,
-                    userInfo.roles
-                );
-
-                stopwatch.Stop();
-                _logger.LogInformation(
-                    "Successful login for user {Username} from {ClientIp} | ClientId: {ClientId} | Time: {ElapsedMs}ms",
-                    request.Username,
-                    clientIp,
-                    clientId,
-                    stopwatch.ElapsedMilliseconds
-                );
-
-                return Ok(new LoginResponse
-                {
-                    Username = request.Username,
-                    Token = token,
-                    Roles = userInfo.roles,
-                });
+                return BadRequest("Username and password are required");
             }
-            catch (Exception ex)
+
+            if (!_users.TryGetValue(request.Username, out var userInfo)
+                || userInfo.password != request.Password)
             {
                 stopwatch.Stop();
-                _logger.LogError(ex,
-                    "Error during login for user {Username} from {ClientIp} | Time: {ElapsedMs}ms",
+                _logger.LogWarning(
+                    "Failed login attempt for user {Username} from {ClientIp} | Time: {ElapsedMs}ms",
                     request.Username,
                     clientIp,
                     stopwatch.ElapsedMilliseconds
                 );
 
-                return StatusCode(500, "An error occurred while processing your request");
+                return Unauthorized("Invalid username or password");
             }
+
+            var clientId = Guid.NewGuid().ToString();
+            var token = _jwtTokenService.GenerateToken(
+                request.Username,
+                clientId,
+                userInfo.roles
+            );
+
+            stopwatch.Stop();
+            _logger.LogInformation(
+                "Successful login for user {Username} from {ClientIp} | ClientId: {ClientId} | Time: {ElapsedMs}ms",
+                request.Username,
+                clientIp,
+                clientId,
+                stopwatch.ElapsedMilliseconds
+            );
+
+            return Ok(new LoginResponse
+            {
+                Username = request.Username,
+                Token = token,
+                Roles = userInfo.roles,
+            });
         }
     }
 }

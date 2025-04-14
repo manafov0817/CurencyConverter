@@ -1,5 +1,5 @@
 using CurrencyConverter.Core.Interfaces;
-using CurrencyConverter.Core.Models;
+using CurrencyConverter.Core.Models.Currency;
 using Microsoft.Extensions.Logging;
 using System.Net.Http.Json;
 using System.Text.Json;

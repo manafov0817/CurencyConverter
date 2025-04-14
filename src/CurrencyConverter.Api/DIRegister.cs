@@ -1,22 +1,26 @@
 using CurrencyConverter.Api.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using OpenTelemetry.Trace;
-using System;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
-namespace CurrencyConverter.Api.DependencyInjection
+namespace CurrencyConverter.Api
 {
     public static class DIRegister
     {
         public static IServiceCollection AddApiServices(this IServiceCollection services, IConfiguration configuration)
         {
             // Configure API controllers
-            services.AddControllers();
+            services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+                    options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+                    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                });
 
             // Configure JWT Authentication
             ConfigureAuthentication(services, configuration);
@@ -30,6 +34,14 @@ namespace CurrencyConverter.Api.DependencyInjection
                 options.ReportApiVersions = true;
                 options.AssumeDefaultVersionWhenUnspecified = true;
                 options.DefaultApiVersion = new Microsoft.AspNetCore.Mvc.ApiVersion(1, 0);
+                options.ApiVersionReader = new Microsoft.AspNetCore.Mvc.Versioning.UrlSegmentApiVersionReader();
+            });
+
+            // Add API version explorer to enable Swagger to understand versioning
+            services.AddVersionedApiExplorer(options =>
+            {
+                options.GroupNameFormat = "'v'VVV";
+                options.SubstituteApiVersionInUrl = true;
             });
 
             // Configure Memory Cache for rate limiting and data caching
@@ -47,6 +59,8 @@ namespace CurrencyConverter.Api.DependencyInjection
         public static IApplicationBuilder UseApiMiddleware(this IApplicationBuilder app)
         {
             // Add custom middleware
+            app.UseMiddleware<PerformanceTrackingMiddleware>(); 
+            app.UseMiddleware<ExceptionHandlingMiddleware>();
             app.UseMiddleware<RequestLoggingMiddleware>();
             app.UseMiddleware<RateLimitingMiddleware>();
 

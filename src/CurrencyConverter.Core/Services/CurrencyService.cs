@@ -1,5 +1,5 @@
 using CurrencyConverter.Core.Interfaces;
-using CurrencyConverter.Core.Models;
+using CurrencyConverter.Core.Models.Currency;
 using CurrencyConverter.Core.Utilities;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;

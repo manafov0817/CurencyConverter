@@ -1,4 +1,4 @@
-using CurrencyConverter.Core.Models;
+using CurrencyConverter.Core.Models.Currency;
 
 namespace CurrencyConverter.Core.Interfaces
 {
