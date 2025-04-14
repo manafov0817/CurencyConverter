@@ -10,12 +10,10 @@ namespace CurrencyConverter.Tests.Middleware
     public class RequestLoggingMiddlewareTests
     {
         private readonly Mock<ILogger<RequestLoggingMiddleware>> _mockLogger;
-        private readonly RequestLoggingMiddleware _middleware;
 
         public RequestLoggingMiddlewareTests()
         {
             _mockLogger = new Mock<ILogger<RequestLoggingMiddleware>>();
-            _middleware = new RequestLoggingMiddleware(_mockLogger.Object);
         }
 
         [Fact]
@@ -37,9 +35,12 @@ namespace CurrencyConverter.Tests.Middleware
                 nextCalled = true;
                 return Task.CompletedTask;
             };
+            
+            // Create a new middleware instance with our test delegate
+            var middleware = new RequestLoggingMiddleware(next, _mockLogger.Object);
 
             // Act
-            await _middleware.InvokeAsync(context);
+            await middleware.InvokeAsync(context);
 
             // Assert
             Assert.True(nextCalled);
@@ -69,9 +70,12 @@ namespace CurrencyConverter.Tests.Middleware
                 nextCalled = true;
                 return Task.CompletedTask;
             };
+            
+            // Create a new middleware instance with our test delegate
+            var middleware = new RequestLoggingMiddleware(next, _mockLogger.Object);
 
             // Act
-            await _middleware.InvokeAsync(context);
+            await middleware.InvokeAsync(context);
 
             // Assert
             Assert.True(nextCalled);
@@ -93,16 +97,19 @@ namespace CurrencyConverter.Tests.Middleware
             context.Connection.RemoteIpAddress = System.Net.IPAddress.Parse("127.0.0.1");
             context.Request.Method = "GET";
             context.Request.Path = "/api/v1/Currency/rates";
-            
+
             RequestDelegate next = async (HttpContext ctx) =>
             {
                 // Simulate some processing time
                 await Task.Delay(10);
                 ctx.Response.StatusCode = 200;
             };
+            
+            // Create a new middleware instance with our test delegate
+            var middleware = new RequestLoggingMiddleware(next, _mockLogger.Object);
 
             // Act
-            await _middleware.InvokeAsync(context);
+            await middleware.InvokeAsync(context);
 
             // Assert
             _mockLogger.Verify(
@@ -123,15 +130,18 @@ namespace CurrencyConverter.Tests.Middleware
             context.Connection.RemoteIpAddress = System.Net.IPAddress.Parse("127.0.0.1");
             context.Request.Method = "GET";
             context.Request.Path = "/api/v1/Currency/rates";
-            
+
             RequestDelegate next = (HttpContext ctx) =>
             {
                 throw new Exception("Test exception");
             };
+            
+            // Create a new middleware instance with our test delegate
+            var middleware = new RequestLoggingMiddleware(next, _mockLogger.Object);
 
             // Act & Assert
-            await Assert.ThrowsAsync<Exception>(() => _middleware.InvokeAsync(context));
-            
+            await Assert.ThrowsAsync<Exception>(() => middleware.InvokeAsync(context));
+
             _mockLogger.Verify(
                 x => x.Log(
                     It.IsAny<LogLevel>(),

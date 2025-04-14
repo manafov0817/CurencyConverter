@@ -1,7 +1,6 @@
 using CurrencyConverter.Infrastructure.Providers;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Polly;
 using Polly.CircuitBreaker;
 using System.Net;
 using Xunit;
@@ -93,7 +92,7 @@ namespace CurrencyConverter.Tests.Providers
 
             // Assert
             Assert.True(circuitOpen);
-            
+
             // The circuit should have broken after 5 failures (each with 4 attempts due to retry policy)
             // So we expect approximately 20 attempts before the circuit breaks
             Assert.True(attemptCount >= 5);

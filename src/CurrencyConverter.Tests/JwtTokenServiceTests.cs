@@ -75,7 +75,7 @@ namespace CurrencyConverter.Tests
             var principal = tokenHandler.ValidateToken(token, validationParameters, out _);
 
             // Assert
-            Assert.Equal(userId, principal.FindFirstValue(JwtRegisteredClaimNames.Sub));
+            Assert.Equal(userId, principal.FindFirstValue(ClaimTypes.NameIdentifier));
             Assert.Equal(clientId, principal.FindFirstValue("ClientId"));
             Assert.Equal("User", principal.FindFirstValue(ClaimTypes.Role));
             Assert.Equal("Admin", principal.FindAll(ClaimTypes.Role).ElementAt(1).Value);

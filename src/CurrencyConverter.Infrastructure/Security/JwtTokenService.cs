@@ -27,7 +27,7 @@ namespace CurrencyConverter.Infrastructure.Security
 
             var claims = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.Sub, userId),
+                new Claim(ClaimTypes.NameIdentifier, userId),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim("ClientId", clientId)
             };

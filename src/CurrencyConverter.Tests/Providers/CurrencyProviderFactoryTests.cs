@@ -1,6 +1,5 @@
 using CurrencyConverter.Core.Interfaces;
 using CurrencyConverter.Infrastructure.Providers;
-using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Xunit;
 
