@@ -208,5 +208,105 @@ namespace CurrencyConverter.Tests.Middleware
             Assert.Equal("An unexpected error occurred. Please try again later.", error.Message);
             Assert.Equal(HttpStatusCode.InternalServerError, error.StatusCode);
         }
+
+        [Fact]
+        public async Task InvokeAsync_WithFormatException_ReturnsBadRequest()
+        {
+            // Arrange
+            var context = new DefaultHttpContext();
+            context.Response.Body = new MemoryStream();
+
+            RequestDelegate next = (HttpContext ctx) =>
+            {
+                throw new FormatException("Invalid format");
+            };
+
+            // Create a new middleware instance with our test delegate
+            var middleware = new ExceptionHandlingMiddleware(next, _mockLogger.Object, _mockEnvironment.Object);
+
+            // Act
+            await middleware.InvokeAsync(context);
+
+            // Assert
+            Assert.Equal((int)HttpStatusCode.BadRequest, context.Response.StatusCode);
+
+            context.Response.Body.Seek(0, SeekOrigin.Begin);
+            var reader = new StreamReader(context.Response.Body);
+            var responseBody = await reader.ReadToEndAsync();
+            var error = JsonSerializer.Deserialize<ErrorResponse>(responseBody, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            Assert.Equal("Invalid format", error.Message);
+            Assert.Equal(HttpStatusCode.BadRequest, error.StatusCode);
+        }
+
+        [Fact]
+        public async Task InvokeAsync_InDevelopmentEnvironment_IncludesDeveloperMessage()
+        {
+            // Arrange
+            var context = new DefaultHttpContext();
+            context.Response.Body = new MemoryStream();
+
+            RequestDelegate next = (HttpContext ctx) =>
+            {
+                throw new Exception("Something went wrong");
+            };
+
+            // Set up the environment to be development
+            _mockEnvironment.Setup(e => e.EnvironmentName).Returns("Development");
+            
+            var middleware = new ExceptionHandlingMiddleware(next, _mockLogger.Object, _mockEnvironment.Object);
+
+            // Act
+            await middleware.InvokeAsync(context);
+
+            // Assert
+            Assert.Equal((int)HttpStatusCode.InternalServerError, context.Response.StatusCode);
+
+            context.Response.Body.Seek(0, SeekOrigin.Begin);
+            var reader = new StreamReader(context.Response.Body);
+            var responseBody = await reader.ReadToEndAsync();
+            var error = JsonSerializer.Deserialize<ErrorResponse>(responseBody, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            Assert.Equal("Something went wrong", error.Message);
+            Assert.Equal(HttpStatusCode.InternalServerError, error.StatusCode);
+            Assert.NotNull(error.DeveloperMessage);
+            Assert.Contains("Something went wrong", error.DeveloperMessage);
+        }
+
+        [Fact]
+        public async Task InvokeAsync_WithException_SetsTraceId()
+        {
+            // Arrange
+            var context = new DefaultHttpContext();
+            context.Response.Body = new MemoryStream();
+            context.TraceIdentifier = "test-trace-id";
+
+            RequestDelegate next = (HttpContext ctx) =>
+            {
+                throw new Exception("Something went wrong");
+            };
+
+            var middleware = new ExceptionHandlingMiddleware(next, _mockLogger.Object, _mockEnvironment.Object);
+
+            // Act
+            await middleware.InvokeAsync(context);
+
+            // Assert
+            context.Response.Body.Seek(0, SeekOrigin.Begin);
+            var reader = new StreamReader(context.Response.Body);
+            var responseBody = await reader.ReadToEndAsync();
+            var error = JsonSerializer.Deserialize<ErrorResponse>(responseBody, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            Assert.Equal("test-trace-id", error.TraceId);
+        }
     }
 }
