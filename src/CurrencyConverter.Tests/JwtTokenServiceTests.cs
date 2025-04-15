@@ -97,7 +97,7 @@ namespace CurrencyConverter.Tests
             // Assert
             var expiry = jwtToken.ValidTo;
             var expectedExpiry = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpiryMinutes);
-            
+
             // Allow a small tolerance for test execution time
             Assert.True(Math.Abs((expectedExpiry - expiry).TotalSeconds) < 5);
         }
