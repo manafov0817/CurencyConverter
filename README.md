@@ -136,8 +136,10 @@ POST /api/v1/auth/login
   - Password: `admin123`
   - Roles: `Admin`
 
-### Currency Operations
+**Note:**
+  You can use the provided users for testing or development purposes. For production, you should implement proper user management and authentication.
 
+### Currency Operations
 All currency endpoints require authentication. Include the JWT token in the Authorization header:
 ```
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
@@ -360,11 +362,11 @@ The API will be available at `http://localhost:8080`.
 You can configure the application by passing environment variables:
 
 ```
-docker run -d -p 8080:80 \
-  -e Jwt__Key="your-secret-key" \
-  -e Jwt__Issuer="your-issuer" \
-  -e Jwt__Audience="your-audience" \
-  --name currency-converter currencyconverter:latest
+docker build -t currency-converter .
+```
+
+```
+docker run -d -p 8080:80 
 ```
 
 #### Viewing Logs
@@ -405,9 +407,6 @@ services:
       - "8080:80"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - Jwt__Key=dev-secret-key
-      - Jwt__Issuer=dev-issuer
-      - Jwt__Audience=dev-audience
     volumes:
       - ./logs:/app/logs
 ```
