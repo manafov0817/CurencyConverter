@@ -25,8 +25,5 @@ RUN mkdir -p logs
 
 # Default environment variables
 ENV ASPNETCORE_URLS=http://+:80
-ENV Jwt__Key=""
-ENV Jwt__Issuer=""
-ENV Jwt__Audience=""
 
 ENTRYPOINT ["dotnet", "CurrencyConverter.Api.dll"]

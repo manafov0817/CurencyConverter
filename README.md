@@ -469,6 +469,8 @@ The project has extensive test coverage, including:
 - Cache behavior
 - Restricted currency handling
 
+![Test Coverage](coverage.png)
+
 ### Generating Test Coverage Reports
 
 While the project is configured with Coverlet for code coverage collection, you'll need to follow these steps to generate human-readable coverage reports locally:
