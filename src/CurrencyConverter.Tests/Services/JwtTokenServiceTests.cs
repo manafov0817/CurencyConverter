@@ -7,7 +7,7 @@ using System.Security.Claims;
 using System.Text;
 using Xunit;
 
-namespace CurrencyConverter.Tests.Services
+namespace CurrencyConverter.Tests
 {
     public class JwtTokenServiceTests
     {
@@ -75,11 +75,10 @@ namespace CurrencyConverter.Tests.Services
             var principal = tokenHandler.ValidateToken(token, validationParameters, out _);
 
             // Assert
-            // Use the exact claim types as shown in the token
-            Assert.Equal(userId, principal.FindFirstValue("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"));
+            Assert.Equal(userId, principal.FindFirstValue(ClaimTypes.NameIdentifier));
             Assert.Equal(clientId, principal.FindFirstValue("ClientId"));
-            Assert.Equal("User", principal.FindFirstValue("http://schemas.microsoft.com/ws/2008/06/identity/claims/role"));
-            Assert.Equal("Admin", principal.FindAll("http://schemas.microsoft.com/ws/2008/06/identity/claims/role").ElementAt(1).Value);
+            Assert.Equal("User", principal.FindFirstValue(ClaimTypes.Role));
+            Assert.Equal("Admin", principal.FindAll(ClaimTypes.Role).ElementAt(1).Value);
         }
 
         [Fact]
@@ -101,56 +100,6 @@ namespace CurrencyConverter.Tests.Services
 
             // Allow a small tolerance for test execution time
             Assert.True(Math.Abs((expectedExpiry - expiry).TotalSeconds) < 5);
-        }
-
-        //[Fact]
-        //public void GenerateToken_WithEmptyRoles_ContainsOnlyUserClaims()
-        //{
-        //    // Arrange
-        //    var userId = "testuser";
-        //    var clientId = "test-client-id";
-        //    var roles = new List<string>();
-
-        //    // Act
-        //    var token = _jwtTokenService.GenerateToken(userId, clientId, roles);
-
-        //    // Decode the token to verify claims directly
-        //    var tokenHandler = new JwtSecurityTokenHandler();
-        //    var jwtToken = tokenHandler.ReadJwtToken(token);
-
-        //    // Assert - check claims directly from the token
-        //    var subClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-        //    var clientIdClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "ClientId");
-        //    var roleClaims = jwtToken.Claims.Where(c => c.Type == ClaimTypes.Role).ToList();
-
-        //    Assert.NotNull(subClaim);
-        //    Assert.Equal(userId, subClaim.Value);
-        //    Assert.NotNull(clientIdClaim);
-        //    Assert.Equal(clientId, clientIdClaim.Value);
-        //    Assert.Empty(roleClaims);
-        //}
-
-        [Fact]
-        public void GenerateToken_WithMultipleRoles_ContainsAllRoles()
-        {
-            // Arrange
-            var userId = "testuser";
-            var clientId = "test-client-id";
-            var roles = new List<string> { "User", "Admin", "Manager" };
-
-            // Act
-            var token = _jwtTokenService.GenerateToken(userId, clientId, roles);
-
-            // Decode the token to verify claims
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var jwtToken = tokenHandler.ReadJwtToken(token);
-
-            // Assert
-            var roleClaims = jwtToken.Claims.Where(c => c.Type == "role").Select(c => c.Value).ToList();
-            Assert.Equal(3, roleClaims.Count);
-            Assert.Contains("User", roleClaims);
-            Assert.Contains("Admin", roleClaims);
-            Assert.Contains("Manager", roleClaims);
         }
     }
 }

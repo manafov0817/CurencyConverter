@@ -5,7 +5,7 @@ using Moq.Protected;
 using System.Net;
 using Xunit;
 
-namespace CurrencyConverter.Tests
+namespace CurrencyConverter.Tests.Services
 {
     public class ResiliencePolicyTests
     {

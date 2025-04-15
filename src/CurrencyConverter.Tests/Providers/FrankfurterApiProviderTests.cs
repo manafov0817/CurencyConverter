@@ -7,7 +7,7 @@ using System.Net;
 using System.Text.Json;
 using Xunit;
 
-namespace CurrencyConverter.Tests
+namespace CurrencyConverter.Tests.Providers
 {
     public class FrankfurterApiProviderTests
     {

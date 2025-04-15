@@ -318,6 +318,112 @@ GET /api/currency/historical?baseCurrency=EUR&startDate=2025-01-01&endDate=2025-
 }
 ```
 
+## Docker Support
+
+### Running with Docker
+
+You can run the Currency Converter API using Docker without installing .NET on your local machine.
+
+#### Prerequisites
+
+- Docker Desktop installed on your machine
+
+#### Building the Docker Image
+
+1. Navigate to the project directory:
+   ```
+   cd CurrencyConverter
+   ```
+
+2. Build the Docker image:
+   ```
+   docker build -t currencyconverter:latest .
+   ```
+
+#### Running the Container
+
+Run the application in a Docker container:
+
+```
+docker run -d -p 8080:80 --name currency-converter currencyconverter:latest
+```
+
+This command:
+- Runs the container in detached mode (`-d`)
+- Maps port 8080 on your host to port 80 in the container (`-p 8080:80`)
+- Names the container "currency-converter" for easy reference
+
+The API will be available at `http://localhost:8080`.
+
+#### Environment Variables
+
+You can configure the application by passing environment variables:
+
+```
+docker run -d -p 8080:80 \
+  -e Jwt__Key="your-secret-key" \
+  -e Jwt__Issuer="your-issuer" \
+  -e Jwt__Audience="your-audience" \
+  --name currency-converter currencyconverter:latest
+```
+
+#### Viewing Logs
+
+To view application logs:
+
+```
+docker logs currency-converter
+```
+
+#### Stopping the Container
+
+To stop the running container:
+
+```
+docker stop currency-converter
+```
+
+To remove the container:
+
+```
+docker rm currency-converter
+```
+
+### Docker Compose (Development Environment)
+
+For a development environment with multiple services, you can use Docker Compose. Create a `docker-compose.yml` file in the root directory:
+
+```yaml
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - Jwt__Key=dev-secret-key
+      - Jwt__Issuer=dev-issuer
+      - Jwt__Audience=dev-audience
+    volumes:
+      - ./logs:/app/logs
+```
+
+Run with Docker Compose:
+
+```
+docker-compose up -d
+```
+
+Stop with Docker Compose:
+
+```
+docker-compose down
+```
+
 ## Testing
 
 The project includes a comprehensive testing strategy with multiple test types:

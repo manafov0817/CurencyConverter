@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
-namespace CurrencyConverter.Tests
+namespace CurrencyConverter.Tests.Services
 {
     public class CurrencyServiceTests
     {
