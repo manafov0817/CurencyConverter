@@ -1,11 +1,12 @@
 using CurrencyConverter.Api.Controllers;
 using CurrencyConverter.Api.Models.Auth;
+using CurrencyConverter.Core.Configuration;
 using CurrencyConverter.Infrastructure.Security;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
-using System.Collections.Generic;
 using System.Net;
 using Xunit;
 
@@ -15,13 +16,36 @@ namespace CurrencyConverter.Tests.Controllers
     {
         private readonly Mock<IJwtTokenService> _mockJwtTokenService;
         private readonly Mock<ILogger<AuthController>> _mockLogger;
+        private readonly Mock<IOptions<UserCredentialsOptions>> _mockUserCredentialsOptions;
         private readonly AuthController _controller;
 
         public AuthControllerTests()
         {
             _mockJwtTokenService = new Mock<IJwtTokenService>();
             _mockLogger = new Mock<ILogger<AuthController>>();
-            _controller = new AuthController(_mockJwtTokenService.Object, _mockLogger.Object);
+            _mockUserCredentialsOptions = new Mock<IOptions<UserCredentialsOptions>>();
+
+            // Setup mock user credentials
+            _mockUserCredentialsOptions.Setup(x => x.Value).Returns(new UserCredentialsOptions
+            {
+                Users = new List<UserCredential>
+                {
+                    new UserCredential
+                    {
+                        Username = "admin",
+                        Password = "admin",
+                        Roles = new List<string> { "Admin" }
+                    },
+                    new UserCredential
+                    {
+                        Username = "user",
+                        Password = "user",
+                        Roles = new List<string> { "User" }
+                    }
+                }
+            });
+
+            _controller = new AuthController(_mockJwtTokenService.Object, _mockLogger.Object, _mockUserCredentialsOptions.Object);
 
             // Setup HttpContext
             var httpContext = new DefaultHttpContext();
@@ -36,7 +60,7 @@ namespace CurrencyConverter.Tests.Controllers
         public void Login_WithValidCredentials_ReturnsOkWithToken()
         {
             // Arrange
-            var request = new LoginRequest { Username = "admin", Password = "admin123" };
+            var request = new LoginRequest { Username = "admin", Password = "admin" };
             var token = "test-jwt-token";
             _mockJwtTokenService.Setup(s => s.GenerateToken(
                 It.IsAny<string>(),
@@ -59,7 +83,7 @@ namespace CurrencyConverter.Tests.Controllers
         public void Login_WithValidUserCredentials_ReturnsOkWithToken()
         {
             // Arrange
-            var request = new LoginRequest { Username = "user", Password = "user123" };
+            var request = new LoginRequest { Username = "user", Password = "user" };
             var token = "test-jwt-token";
             _mockJwtTokenService.Setup(s => s.GenerateToken(
                 It.IsAny<string>(),

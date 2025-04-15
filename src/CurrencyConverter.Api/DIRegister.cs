@@ -1,11 +1,14 @@
 using CurrencyConverter.Api.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using OpenTelemetry.Trace;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using CurrencyConverter.Core.Configuration;
 
 namespace CurrencyConverter.Api
 {
@@ -20,6 +23,10 @@ namespace CurrencyConverter.Api
                     options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
                     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
                 });
+
+            // Register UserCredentialsOptions from configuration
+            services.Configure<UserCredentialsOptions>(
+                configuration.GetSection(UserCredentialsOptions.UserCredentials));
 
             ConfigureAuthentication(services, configuration);
 

@@ -2,7 +2,10 @@ using CurrencyConverter.Api.Models.Auth;
 using CurrencyConverter.Infrastructure.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using System.Diagnostics;
+using System.Linq;
+using CurrencyConverter.Core.Configuration;
 
 namespace CurrencyConverter.Api.Controllers
 {
@@ -13,20 +16,15 @@ namespace CurrencyConverter.Api.Controllers
     {
         private readonly IJwtTokenService _jwtTokenService;
         private readonly ILogger<AuthController> _logger;
-
-        // In a real application, this would be replaced with a proper user repository
-        private static readonly Dictionary<string, (string password, List<string> roles)> _users =
-            new Dictionary<string, (string, List<string>)>
-            {
-                { "admin", ("admin123", new List<string> { "Admin" }) },
-                { "user", ("user123", new List<string> { "User" }) },
-            };
+        private readonly UserCredentialsOptions _userCredentialsOptions;
 
         public AuthController(IJwtTokenService jwtTokenService,
-                              ILogger<AuthController> logger)
+                              ILogger<AuthController> logger,
+                              IOptions<UserCredentialsOptions> userCredentialsOptions)
         {
             _jwtTokenService = jwtTokenService ?? throw new ArgumentNullException(nameof(jwtTokenService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _userCredentialsOptions = userCredentialsOptions?.Value ?? throw new ArgumentNullException(nameof(userCredentialsOptions));
         }
 
         [HttpPost("login")]
@@ -41,8 +39,10 @@ namespace CurrencyConverter.Api.Controllers
                 return BadRequest("Username and password are required");
             }
 
-            if (!_users.TryGetValue(request.Username, out var userInfo)
-                || userInfo.password != request.Password)
+            var userInfo = _userCredentialsOptions.Users.FirstOrDefault(u => 
+                u.Username.Equals(request.Username, StringComparison.OrdinalIgnoreCase));
+
+            if (userInfo == null || userInfo.Password != request.Password)
             {
                 stopwatch.Stop();
                 _logger.LogWarning(
@@ -59,7 +59,7 @@ namespace CurrencyConverter.Api.Controllers
             var token = _jwtTokenService.GenerateToken(
                 request.Username,
                 clientId,
-                userInfo.roles
+                userInfo.Roles
             );
 
             stopwatch.Stop();
@@ -75,7 +75,7 @@ namespace CurrencyConverter.Api.Controllers
             {
                 Username = request.Username,
                 Token = token,
-                Roles = userInfo.roles,
+                Roles = userInfo.Roles,
             });
         }
     }
