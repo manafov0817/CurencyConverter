@@ -582,6 +582,8 @@ var convertResult = await convertResponse.Content.ReadAsStringAsync();
 var historicalResponse = await client.GetAsync(
     "https://localhost:5001/api/currency/historical?baseCurrency=EUR&startDate=2025-01-01&endDate=2025-01-31&page=1&pageSize=5");
 var historicalResult = await historicalResponse.Content.ReadAsStringAsync();
+```
+
 
 ## Assumptions
 
